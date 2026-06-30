@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { SlidersHorizontal, X } from "lucide-react";
 import HotelCard from "../components/HotelCard.jsx";
-import { areas, budgetRanges, hotels, hotelTypes } from "../data/hotels.js";
 import { usePageMeta } from "../hooks/usePageMeta.js";
+import { useI18n, useLocalizedHotelData } from "../i18n.jsx";
 
 const defaultFilters = {
   area: "All",
@@ -19,11 +19,10 @@ export default function HotelsPage() {
   const [searchParams] = useSearchParams();
   const initialArea = searchParams.get("area") || "All";
   const [filters, setFilters] = useState({ ...defaultFilters, area: initialArea });
+  const { t } = useI18n();
+  const { areas, budgetRanges, hotels, hotelTypes } = useLocalizedHotelData();
 
-  usePageMeta(
-    "Hotels in Batumi | Small Hotels Batumi",
-    "Browse demo small hotels, family hotels, guesthouses, aparthotels, and mini hotels in Batumi."
-  );
+  usePageMeta(t("meta.hotelsTitle"), t("meta.hotelsDescription"));
 
   const filteredHotels = useMemo(() => {
     return hotels.filter((hotel) => {
@@ -46,59 +45,62 @@ export default function HotelsPage() {
     <main>
       <section className="page-hero compact">
         <div>
-          <h1>Hotels in Batumi</h1>
-          <p>
-            A mobile-first grid view for family hotels, guesthouses, aparthotels, and mini hotels.
-            Filters are local for this demo.
-          </p>
+          <h1>{t("hotelsPage.title")}</h1>
+          <p>{t("hotelsPage.body")}</p>
         </div>
       </section>
 
       <section className="section hotels-layout">
-        <aside className="filter-panel" aria-label="Hotel filters">
+        <aside className="filter-panel" aria-label={t("hotelsPage.filtersLabel")}>
           <div className="filter-title">
             <h2>
               <SlidersHorizontal size={19} />
-              Filters
+              {t("hotelsPage.filtersTitle")}
             </h2>
             <button className="text-button" type="button" onClick={() => setFilters(defaultFilters)}>
               <X size={16} />
-              Clear
+              {t("hotelsPage.clear")}
             </button>
           </div>
           <label>
-            Area
+            {t("hotelsPage.area")}
             <select value={filters.area} onChange={(event) => updateFilter("area", event.target.value)}>
-              <option>All</option>
+              <option value="All">{t("common.all")}</option>
               {areas.map((area) => (
-                <option key={area.name}>{area.name}</option>
+                <option key={area.name} value={area.name}>
+                  {area.label}
+                </option>
               ))}
             </select>
           </label>
           <label>
-            Hotel Type
+            {t("hotelsPage.type")}
             <select value={filters.type} onChange={(event) => updateFilter("type", event.target.value)}>
-              <option>All</option>
+              <option value="All">{t("common.all")}</option>
               {hotelTypes.map((type) => (
-                <option key={type}>{type}</option>
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
               ))}
             </select>
           </label>
           <label>
-            Budget Range
+            {t("hotelsPage.budget")}
             <select value={filters.budget} onChange={(event) => updateFilter("budget", event.target.value)}>
-              <option>All</option>
+              <option value="All">{t("common.all")}</option>
               {budgetRanges.map((range) => (
-                <option key={range}>{range}</option>
+                <option key={range.value} value={range.value}>
+                  {range.label}
+                </option>
               ))}
             </select>
           </label>
           <div className="check-list">
             {[
-              ["familyFriendly", "Family Friendly"],
-              ["seaView", "Sea View"],
-              ["nearBeach", "Near Beach"],
-              ["parking", "Parking"]
+              ["familyFriendly", t("hotelsPage.options.familyFriendly")],
+              ["seaView", t("hotelsPage.options.seaView")],
+              ["nearBeach", t("hotelsPage.options.nearBeach")],
+              ["parking", t("hotelsPage.options.parking")]
             ].map(([key, label]) => (
               <label key={key} className="check-row">
                 <input
@@ -114,8 +116,8 @@ export default function HotelsPage() {
 
         <div className="hotel-results">
           <div className="results-heading">
-            <h2>{filteredHotels.length} hotels available</h2>
-            <p>Each card keeps photos, area, tags, WhatsApp, and detail-page access close together.</p>
+            <h2>{t("hotelsPage.resultsTitle", { count: filteredHotels.length })}</h2>
+            <p>{t("hotelsPage.resultsBody")}</p>
           </div>
           <div className="hotel-grid results-grid">
             {filteredHotels.map((hotel) => (
@@ -124,8 +126,8 @@ export default function HotelsPage() {
           </div>
           {filteredHotels.length === 0 && (
             <div className="empty-state">
-              <h3>No hotels match these filters.</h3>
-              <p>Clear a filter to see more demo properties.</p>
+              <h3>{t("hotelsPage.emptyTitle")}</h3>
+              <p>{t("hotelsPage.emptyBody")}</p>
             </div>
           )}
         </div>

@@ -124,6 +124,40 @@ main {
   display: none;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  gap: 0.55rem;
+}
+
+.language-switcher {
+  display: inline-grid;
+  min-width: 0;
+}
+
+.language-switcher span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.language-switcher select {
+  width: min(30vw, 128px);
+  min-height: 42px;
+  padding: 0.55rem 2rem 0.55rem 0.68rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--white);
+  color: var(--bronze-dark);
+  font-size: 0.88rem;
+  font-weight: 800;
+  outline: none;
+}
+
 .icon-button {
   display: inline-grid;
   place-items: center;
@@ -1135,6 +1169,10 @@ p {
     font-weight: 800;
   }
 
+  .language-switcher select {
+    width: 132px;
+  }
+
   .menu-button,
   .mobile-nav {
     display: none;
@@ -1201,6 +1239,40 @@ p {
   .site-footer {
     grid-template-columns: 1fr auto;
   }
+}
+
+html[dir="rtl"] body {
+  text-align: right;
+}
+
+html[dir="rtl"] .desktop-nav,
+html[dir="rtl"] .mobile-nav,
+html[dir="rtl"] .footer-links,
+html[dir="rtl"] .filter-panel,
+html[dir="rtl"] .form-panel,
+html[dir="rtl"] .clean-list {
+  direction: rtl;
+}
+
+html[dir="rtl"] .journey-grid article,
+html[dir="rtl"] .contact-copy dl div {
+  border-left: 0;
+  border-right: 4px solid var(--bronze);
+}
+
+html[dir="rtl"] .detail-list p {
+  border-left: 0;
+  border-right: 4px solid var(--coast);
+}
+
+html[dir="rtl"] .journey-grid ol {
+  padding-right: 1.25rem;
+  padding-left: 0;
+}
+
+html[dir="rtl"] .area-card a svg,
+html[dir="rtl"] .back-link svg {
+  transform: scaleX(-1);
 }
 
 @media (min-width: 1180px) {

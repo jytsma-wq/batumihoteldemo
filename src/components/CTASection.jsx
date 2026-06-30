@@ -1,19 +1,25 @@
 import { Link } from "react-router-dom";
+import { useI18n } from "../i18n.jsx";
 
 export default function CTASection({
-  title = "Show Your Hotel to More Guests",
-  body = "Turn a simple local hotel into a polished online presentation with professional photos, direct enquiries, and a page guests can trust.",
-  button = "Request Demo",
+  title,
+  body,
+  button,
   to = "/contact"
 }) {
+  const { t } = useI18n();
+  const resolvedTitle = title ?? t("cta.title");
+  const resolvedBody = body ?? t("cta.body");
+  const resolvedButton = button ?? t("cta.button");
+
   return (
     <section className="cta-section">
       <div>
-        <h2>{title}</h2>
-        <p>{body}</p>
+        <h2>{resolvedTitle}</h2>
+        <p>{resolvedBody}</p>
       </div>
       <Link className="button primary large" to={to}>
-        {button}
+        {resolvedButton}
       </Link>
     </section>
   );

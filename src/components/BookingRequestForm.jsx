@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { Send } from "lucide-react";
+import { useI18n } from "../i18n.jsx";
 
 export default function BookingRequestForm({ hotelName = "this hotel" }) {
   const [sent, setSent] = useState(false);
+  const { t } = useI18n();
+  const defaultMessage = t("forms.bookingMessage", { hotelName });
 
   function handleSubmit(event) {
     event.preventDefault();
@@ -11,39 +14,40 @@ export default function BookingRequestForm({ hotelName = "this hotel" }) {
 
   return (
     <form className="form-panel" onSubmit={handleSubmit}>
-      <h3>Booking request</h3>
-      <p>Send a simple enquiry directly to the hotel owner. No payment is taken here.</p>
+      <h3>{t("forms.bookingTitle")}</h3>
+      <p>{t("forms.bookingBody")}</p>
       <label>
-        Name
+        {t("forms.name")}
         <input name="name" type="text" autoComplete="name" required />
       </label>
       <label>
-        Phone or WhatsApp
+        {t("forms.phoneWhatsapp")}
         <input name="phone" type="tel" autoComplete="tel" required />
       </label>
       <div className="form-row">
         <label>
-          Arrival
+          {t("forms.arrival")}
           <input name="arrival" type="date" required />
         </label>
         <label>
-          Nights
+          {t("forms.nights")}
           <input name="nights" type="number" min="1" max="60" defaultValue="3" required />
         </label>
       </div>
       <label>
-        Message
+        {t("forms.message")}
         <textarea
+          key={defaultMessage}
           name="message"
           rows="4"
-          defaultValue={`Hello, I would like to check availability at ${hotelName}.`}
+          defaultValue={defaultMessage}
         />
       </label>
       <button className="button primary" type="submit">
         <Send size={17} />
-        Send Request
+        {t("forms.sendRequest")}
       </button>
-      {sent && <p className="success-note">Demo request captured. In production this would go to the hotel owner.</p>}
+      {sent && <p className="success-note">{t("forms.bookingSuccess")}</p>}
     </form>
   );
 }

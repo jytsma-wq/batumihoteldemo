@@ -4,16 +4,19 @@ import BookingRequestForm from "../components/BookingRequestForm.jsx";
 import CTASection from "../components/CTASection.jsx";
 import HotelGallery from "../components/HotelGallery.jsx";
 import WhatsAppButton from "../components/WhatsAppButton.jsx";
-import { hotels } from "../data/hotels.js";
 import { usePageMeta } from "../hooks/usePageMeta.js";
+import { useI18n, useLocalizedHotelData } from "../i18n.jsx";
 
 export default function HotelDetailPage() {
   const { slug } = useParams();
+  const { t } = useI18n();
+  const { hotels } = useLocalizedHotelData();
   const hotel = hotels.find((item) => item.slug === slug) || hotels[0];
+  const areaLabel = hotel.areaLabel ?? hotel.area;
 
   usePageMeta(
-    `${hotel.name} | Small Hotels Batumi`,
-    `${hotel.name} in ${hotel.area}. View photos, facilities, nearby attractions, and direct contact options.`
+    t("meta.detailTitle", { hotelName: hotel.name }),
+    t("meta.detailDescription", { hotelName: hotel.name, area: areaLabel })
   );
 
   return (
@@ -23,23 +26,23 @@ export default function HotelDetailPage() {
         <div className="hotel-detail-copy">
           <Link className="back-link" to="/hotels">
             <ArrowLeft size={17} />
-            Hotels
+            {t("detail.backToHotels")}
           </Link>
           <h1>{hotel.name}</h1>
           <p className="location-line">
             <MapPin size={18} />
-            {hotel.area}
+            {areaLabel}
           </p>
           <p>{hotel.intro}</p>
           <div className="detail-contact-row">
             <WhatsAppButton phone={hotel.whatsapp} hotelName={hotel.name} />
             <a className="button secondary" href={`tel:${hotel.phone.replaceAll(" ", "")}`}>
               <Phone size={18} />
-              Call
+              {t("detail.call")}
             </a>
             <a className="button secondary" href={`mailto:${hotel.email}`}>
               <Mail size={18} />
-              Email
+              {t("detail.email")}
             </a>
           </div>
         </div>
@@ -50,7 +53,7 @@ export default function HotelDetailPage() {
           <HotelGallery hotel={hotel} />
 
           <section className="detail-section">
-            <h2>Why stay here</h2>
+            <h2>{t("detail.whyStay")}</h2>
             <div className="detail-list">
               {hotel.whyStay.map((item) => (
                 <p key={item}>{item}</p>
@@ -60,7 +63,7 @@ export default function HotelDetailPage() {
 
           <section className="detail-section two-column-detail">
             <div>
-              <h2>Room overview</h2>
+              <h2>{t("detail.rooms")}</h2>
               <ul className="clean-list">
                 {hotel.rooms.map((room) => (
                   <li key={room}>{room}</li>
@@ -68,7 +71,7 @@ export default function HotelDetailPage() {
               </ul>
             </div>
             <div>
-              <h2>Facilities</h2>
+              <h2>{t("detail.facilities")}</h2>
               <ul className="clean-list">
                 {hotel.facilities.map((facility) => (
                   <li key={facility}>{facility}</li>
@@ -79,20 +82,17 @@ export default function HotelDetailPage() {
 
           <section className="detail-section location-section">
             <div>
-              <h2>Location</h2>
-              <p>
-                This demo map area shows where a lightweight local page can explain access,
-                nearby attractions, and neighborhood context without becoming a complex booking tool.
-              </p>
-              <h3>Nearby attractions</h3>
+              <h2>{t("detail.location")}</h2>
+              <p>{t("detail.locationBody")}</p>
+              <h3>{t("detail.nearby")}</h3>
               <ul className="clean-list attraction-list">
                 {hotel.nearby.map((place) => (
                   <li key={place}>{place}</li>
                 ))}
               </ul>
             </div>
-            <div className="map-placeholder" role="img" aria-label={`Map placeholder for ${hotel.name}`}>
-              <span>{hotel.area}</span>
+            <div className="map-placeholder" role="img" aria-label={t("common.mapLabel", { hotelName: hotel.name })}>
+              <span>{areaLabel}</span>
             </div>
           </section>
         </div>
@@ -103,9 +103,9 @@ export default function HotelDetailPage() {
       </section>
 
       <CTASection
-        title="Want Your Hotel Presented Like This?"
-        body="This detail page is the sales argument: professional photos, simple contact, and a premium story for a local property."
-        button="Request Demo"
+        title={t("detail.ctaTitle")}
+        body={t("detail.ctaBody")}
+        button={t("detail.ctaButton")}
       />
     </main>
   );

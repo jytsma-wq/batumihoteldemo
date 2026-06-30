@@ -1,17 +1,17 @@
 import { Link } from "react-router-dom";
-import { Camera, Handshake, Heart, Landmark, MapPinned, ShieldCheck } from "lucide-react";
-import { areas, hotels } from "../data/hotels.js";
+import { Camera, Handshake, Landmark, MapPinned, ShieldCheck } from "lucide-react";
 import { usePageMeta } from "../hooks/usePageMeta.js";
 import AreaCard from "../components/AreaCard.jsx";
 import CTASection from "../components/CTASection.jsx";
 import FeatureList from "../components/FeatureList.jsx";
 import HotelCard from "../components/HotelCard.jsx";
+import { useI18n, useLocalizedHotelData } from "../i18n.jsx";
 
 export default function HomePage() {
-  usePageMeta(
-    "Small Hotels Batumi | Independent Hotels and Guesthouses",
-    "Discover small independent hotels in Batumi, presented with professional photography and direct contact options."
-  );
+  const { features, list, t } = useI18n();
+  const { areas, hotels } = useLocalizedHotelData();
+
+  usePageMeta(t("meta.homeTitle"), t("meta.homeDescription"));
 
   return (
     <main>
@@ -20,50 +20,44 @@ export default function HomePage() {
         style={{ "--hero-image": `url(${hotels[0].gallery[1]})` }}
       >
         <div className="hero-copy">
-          <h1>Discover Small Independent Hotels in Batumi</h1>
-          <p>
-            Family hotels, guesthouses and local stays presented with professional
-            photography and direct contact options.
-          </p>
+          <h1>{t("home.heroTitle")}</h1>
+          <p>{t("home.heroBody")}</p>
           <div className="hero-actions">
             <Link className="button primary large" to="/hotels">
-              View Hotels
+              {t("nav.viewHotels")}
             </Link>
             <Link className="button secondary large" to="/for-hotel-owners">
-              List Your Hotel
+              {t("nav.listYourHotel")}
             </Link>
           </div>
         </div>
       </section>
 
       <section className="section showcase-section">
-        <div className="showcase-grid" aria-label="Large hotel photography showcase">
-          <img src={hotels[2].image} alt="Sea view hotel room in Batumi" />
-          <img src={hotels[0].image} alt="Small hotel exterior in Batumi" />
-          <img src={hotels[5].image} alt="Coastal guesthouse view" />
+        <div className="showcase-grid" aria-label={t("home.showcaseLabel")}>
+          <img src={hotels[2].image} alt={t("home.showcaseSeaAlt")} />
+          <img src={hotels[0].image} alt={t("home.showcaseExteriorAlt")} />
+          <img src={hotels[5].image} alt={t("home.showcaseCoastalAlt")} />
         </div>
       </section>
 
       <section className="section intro-strip">
         <div className="section-heading">
-          <h2>Presented like a boutique travel guide, not a booking directory.</h2>
-          <p>
-            Every page is designed to make a real local hotel feel trustworthy,
-            polished, and easy to contact.
-          </p>
+          <h2>{t("home.introTitle")}</h2>
+          <p>{t("home.introBody")}</p>
         </div>
         <div className="proof-grid">
           <span>
             <Camera size={20} />
-            Photography first
+            {t("home.proofPhotography")}
           </span>
           <span>
             <Handshake size={20} />
-            Direct enquiries
+            {t("home.proofEnquiries")}
           </span>
           <span>
             <ShieldCheck size={20} />
-            No booking commission
+            {t("home.proofCommission")}
           </span>
         </div>
       </section>
@@ -71,11 +65,11 @@ export default function HomePage() {
       <section className="section">
         <div className="section-heading split">
           <div>
-            <h2>Featured Hotels</h2>
-            <p>Six demo hotels show how different local properties can be presented with a consistent premium style.</p>
+            <h2>{t("home.featuredTitle")}</h2>
+            <p>{t("home.featuredBody")}</p>
           </div>
           <Link className="text-link" to="/hotels">
-            View all hotels
+            {t("home.viewAllHotels")}
           </Link>
         </div>
         <div className="hotel-grid">
@@ -87,8 +81,8 @@ export default function HomePage() {
 
       <section className="section area-band">
         <div className="section-heading">
-          <h2>Explore Areas</h2>
-          <p>Owners can see how location becomes part of the sales story, from Old Batumi to quieter coastal villages.</p>
+          <h2>{t("home.areasTitle")}</h2>
+          <p>{t("home.areasBody")}</p>
         </div>
         <div className="area-grid">
           {areas.map((area) => (
@@ -99,63 +93,38 @@ export default function HomePage() {
 
       <section className="section editorial-section">
         <div className="editorial-copy">
-          <h2>Why Small Hotels?</h2>
-          <p>
-            Batumi's smaller hotels often have the warmth guests want, but not the
-            presentation they need. This demo shows how a better visual story can
-            make local ownership feel like an advantage.
-          </p>
+          <h2>{t("home.whyTitle")}</h2>
+          <p>{t("home.whyBody")}</p>
         </div>
-        <FeatureList
-          items={[
-            {
-              title: "Personal service",
-              body: "Guests know they are speaking to real owners and hosts, not a distant call center."
-            },
-            {
-              title: "Local ownership",
-              body: "Each listing highlights the neighborhood, host style, and story behind the property."
-            },
-            {
-              title: "Authentic experience",
-              body: "Small places can compete with character, warmth, and real photography."
-            },
-            {
-              title: "Better value",
-              body: "Direct contact supports simple requests without complex booking systems or commissions."
-            }
-          ]}
-        />
+        <FeatureList items={features("home.features")} />
       </section>
 
       <section className="section how-section">
         <div className="section-heading">
-          <h2>How It Works</h2>
-          <p>Two simple journeys: one for guests, one for hotel owners.</p>
+          <h2>{t("home.howTitle")}</h2>
+          <p>{t("home.howBody")}</p>
         </div>
         <div className="journey-grid">
           <article>
             <h3>
               <MapPinned size={22} />
-              For guests
+              {t("home.guestsTitle")}
             </h3>
             <ol>
-              <li>Discover hotel</li>
-              <li>View photos</li>
-              <li>Contact directly</li>
-              <li>Book stay</li>
+              {list("home.guestSteps").map((step) => (
+                <li key={step}>{step}</li>
+              ))}
             </ol>
           </article>
           <article>
             <h3>
               <Landmark size={22} />
-              For hotel owners
+              {t("home.ownersTitle")}
             </h3>
             <ol>
-              <li>Photography</li>
-              <li>Hotel page</li>
-              <li>Direct enquiries</li>
-              <li>Increased visibility</li>
+              {list("home.ownerSteps").map((step) => (
+                <li key={step}>{step}</li>
+              ))}
             </ol>
           </article>
         </div>
