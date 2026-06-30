@@ -1,114 +1,111 @@
 import { useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { SlidersHorizontal, X } from "lucide-react";
 import HotelCard from "../components/HotelCard.jsx";
 import { usePageMeta } from "../hooks/usePageMeta.js";
-import { useI18n, useLocalizedHotelData } from "../i18n.jsx";
+import { areas, collections, filterHotels, filterOptions, hotelTypes, budgetRanges } from "../data/site.js";
+import { useI18n, useLocalePath } from "../i18n.jsx";
 
 const defaultFilters = {
-  area: "All",
-  type: "All",
-  budget: "All",
-  familyFriendly: false,
-  seaView: false,
-  nearBeach: false,
-  parking: false
+  areaSlug: "",
+  type: "",
+  budget: ""
 };
 
 export default function HotelsPage() {
   const [searchParams] = useSearchParams();
-  const initialArea = searchParams.get("area") || "All";
-  const [filters, setFilters] = useState({ ...defaultFilters, area: initialArea });
-  const { t } = useI18n();
-  const { areas, budgetRanges, hotels, hotelTypes } = useLocalizedHotelData();
+  const [filters, setFilters] = useState(() => ({
+    ...defaultFilters,
+    areaSlug: searchParams.get("area") ?? "",
+    type: searchParams.get("type") ?? "",
+    budget: searchParams.get("budget") ?? ""
+  }));
+  const { dataLabel, t } = useI18n();
+  const localePath = useLocalePath();
 
-  usePageMeta(t("meta.hotelsTitle"), t("meta.hotelsDescription"));
+  usePageMeta(`${t("hotelsPage.title")} | Small Hotels Batumi`, t("hotelsPage.intro"));
 
-  const filteredHotels = useMemo(() => {
-    return hotels.filter((hotel) => {
-      if (filters.area !== "All" && hotel.area !== filters.area) return false;
-      if (filters.type !== "All" && hotel.type !== filters.type) return false;
-      if (filters.budget !== "All" && hotel.budget !== filters.budget) return false;
-      if (filters.familyFriendly && !hotel.familyFriendly) return false;
-      if (filters.seaView && !hotel.seaView) return false;
-      if (filters.nearBeach && !hotel.nearBeach) return false;
-      if (filters.parking && !hotel.parking) return false;
-      return true;
-    });
+  const activeFilters = useMemo(() => {
+    const flagFilters = Object.fromEntries(filterOptions.map((option) => [option.key, Boolean(filters[option.key])]));
+    return { ...filters, ...flagFilters };
   }, [filters]);
+
+  const filteredHotels = useMemo(() => filterHotels(activeFilters), [activeFilters]);
 
   function updateFilter(name, value) {
     setFilters((current) => ({ ...current, [name]: value }));
   }
 
+  function clearFilters() {
+    setFilters(defaultFilters);
+  }
+
   return (
     <main>
-      <section className="page-hero compact">
-        <div>
-          <h1>{t("hotelsPage.title")}</h1>
-          <p>{t("hotelsPage.body")}</p>
-        </div>
+      <section className="page-hero">
+        <p className="eyebrow">Batumi accommodation directory</p>
+        <h1>{t("hotelsPage.title")}</h1>
+        <p>{t("hotelsPage.intro")}</p>
       </section>
 
       <section className="section hotels-layout">
-        <aside className="filter-panel" aria-label={t("hotelsPage.filtersLabel")}>
+        <aside className="filter-panel" aria-label={t("hotelsPage.filters")}>
           <div className="filter-title">
             <h2>
               <SlidersHorizontal size={19} />
-              {t("hotelsPage.filtersTitle")}
+              {t("hotelsPage.filters")}
             </h2>
-            <button className="text-button" type="button" onClick={() => setFilters(defaultFilters)}>
+            <button className="text-button" type="button" onClick={clearFilters}>
               <X size={16} />
-              {t("hotelsPage.clear")}
+              {t("common.clear")}
             </button>
           </div>
+
           <label>
             {t("hotelsPage.area")}
-            <select value={filters.area} onChange={(event) => updateFilter("area", event.target.value)}>
-              <option value="All">{t("common.all")}</option>
+            <select value={filters.areaSlug} onChange={(event) => updateFilter("areaSlug", event.target.value)}>
+              <option value="">{t("common.all")}</option>
               {areas.map((area) => (
-                <option key={area.name} value={area.name}>
-                  {area.label}
+                <option key={area.slug} value={area.slug}>
+                  {dataLabel("areas", area.name)}
                 </option>
               ))}
             </select>
           </label>
+
           <label>
             {t("hotelsPage.type")}
             <select value={filters.type} onChange={(event) => updateFilter("type", event.target.value)}>
-              <option value="All">{t("common.all")}</option>
+              <option value="">{t("common.all")}</option>
               {hotelTypes.map((type) => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
+                <option key={type} value={type}>
+                  {type}
                 </option>
               ))}
             </select>
           </label>
+
           <label>
             {t("hotelsPage.budget")}
             <select value={filters.budget} onChange={(event) => updateFilter("budget", event.target.value)}>
-              <option value="All">{t("common.all")}</option>
+              <option value="">{t("common.all")}</option>
               {budgetRanges.map((range) => (
-                <option key={range.value} value={range.value}>
-                  {range.label}
+                <option key={range} value={range}>
+                  {range}
                 </option>
               ))}
             </select>
           </label>
+
           <div className="check-list">
-            {[
-              ["familyFriendly", t("hotelsPage.options.familyFriendly")],
-              ["seaView", t("hotelsPage.options.seaView")],
-              ["nearBeach", t("hotelsPage.options.nearBeach")],
-              ["parking", t("hotelsPage.options.parking")]
-            ].map(([key, label]) => (
-              <label key={key} className="check-row">
+            {filterOptions.map((option) => (
+              <label key={option.key} className="check-row">
                 <input
                   type="checkbox"
-                  checked={filters[key]}
-                  onChange={(event) => updateFilter(key, event.target.checked)}
+                  checked={Boolean(filters[option.key])}
+                  onChange={(event) => updateFilter(option.key, event.target.checked)}
                 />
-                {label}
+                {dataLabel("filters", option.label)}
               </label>
             ))}
           </div>
@@ -116,18 +113,27 @@ export default function HotelsPage() {
 
         <div className="hotel-results">
           <div className="results-heading">
-            <h2>{t("hotelsPage.resultsTitle", { count: filteredHotels.length })}</h2>
-            <p>{t("hotelsPage.resultsBody")}</p>
+            <h2>{t("hotelsPage.results", { count: filteredHotels.length })}</h2>
+            <p>{t("hotelsPage.helpfulLinks")}</p>
+            <div className="inline-link-row">
+              {collections.slice(0, 6).map((collection) => (
+                <Link key={collection.slug} to={localePath(`/collections/${collection.slug}`)}>
+                  {collection.title}
+                </Link>
+              ))}
+            </div>
           </div>
+
           <div className="hotel-grid results-grid">
             {filteredHotels.map((hotel) => (
               <HotelCard key={hotel.slug} hotel={hotel} />
             ))}
           </div>
+
           {filteredHotels.length === 0 && (
             <div className="empty-state">
-              <h3>{t("hotelsPage.emptyTitle")}</h3>
-              <p>{t("hotelsPage.emptyBody")}</p>
+              <h3>{t("hotelsPage.noResults")}</h3>
+              <p>{t("hotelsPage.noResultsBody")}</p>
             </div>
           )}
         </div>

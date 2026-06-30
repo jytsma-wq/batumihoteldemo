@@ -5,7 +5,6 @@ import { useI18n } from "../i18n.jsx";
 export default function ContactForm() {
   const [sent, setSent] = useState(false);
   const { t } = useI18n();
-  const defaultMessage = t("forms.contactMessage");
 
   function handleSubmit(event) {
     event.preventDefault();
@@ -14,33 +13,25 @@ export default function ContactForm() {
 
   return (
     <form className="form-panel contact-form" onSubmit={handleSubmit}>
+      <h3>{t("contact.title")}</h3>
       <label>
         {t("forms.name")}
         <input name="name" type="text" autoComplete="name" required />
-      </label>
-      <label>
-        {t("forms.hotelName")}
-        <input name="hotelName" type="text" autoComplete="organization" required />
       </label>
       <label>
         {t("forms.phone")}
         <input name="phone" type="tel" autoComplete="tel" required />
       </label>
       <label>
-        {t("forms.whatsapp")}
-        <input name="whatsapp" type="tel" required />
-      </label>
-      <label>
-        {t("forms.email")}
-        <input name="email" type="email" autoComplete="email" required />
+        Email
+        <input name="email" type="email" autoComplete="email" />
       </label>
       <label>
         {t("forms.message")}
         <textarea
-          key={defaultMessage}
           name="message"
           rows="5"
-          defaultValue={defaultMessage}
+          defaultValue="I am looking for a small hotel in Batumi. Dates, area and budget:"
         />
       </label>
       <button className="button primary" type="submit">

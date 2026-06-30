@@ -1,18 +1,20 @@
 import { Link } from "react-router-dom";
-import { MapPin } from "lucide-react";
+import { MapPin, Waves } from "lucide-react";
 import WhatsAppButton from "./WhatsAppButton.jsx";
-import { useI18n } from "../i18n.jsx";
+import { useI18n, useLocalePath } from "../i18n.jsx";
 
 export default function HotelCard({ hotel, priority = false }) {
   const { t } = useI18n();
-  const areaLabel = hotel.areaLabel ?? hotel.area;
+  const localePath = useLocalePath();
+  const areaLabel = hotel.areaLabel ?? hotel.areaName;
+  const badges = hotel.badges ?? hotel.tags ?? [];
 
   return (
     <article className="hotel-card">
-      <Link className="hotel-image-link" to={`/hotels/${hotel.slug}`}>
+      <Link className="hotel-image-link" to={localePath(`/hotels/${hotel.slug}`)}>
         <img
           src={hotel.image}
-          alt={t("common.hotelImageAlt", { hotelName: hotel.name, area: areaLabel })}
+          alt={`${hotel.name} in ${areaLabel}, Batumi`}
           loading={priority ? "eager" : "lazy"}
         />
       </Link>
@@ -24,16 +26,26 @@ export default function HotelCard({ hotel, priority = false }) {
             {areaLabel}
           </span>
         </div>
-        <div className="tag-row" aria-label={t("common.tagsLabel", { hotelName: hotel.name })}>
-          {hotel.tags.map((tag) => (
+        <p>{hotel.shortDescription}</p>
+        <div className="tag-row" aria-label={`${hotel.name} highlights`}>
+          {badges.slice(0, 4).map((tag) => (
             <span key={tag}>{tag}</span>
           ))}
         </div>
+        <div className="card-facts">
+          <span>
+            <Waves size={15} />
+            {hotel.distanceToBeach}
+          </span>
+          <strong>
+            {t("common.from")} {hotel.priceFromGel} {t("common.gel")}
+          </strong>
+        </div>
         <div className="hotel-actions">
-          <Link className="button secondary" to={`/hotels/${hotel.slug}`}>
-            {t("hotelCard.viewHotel")}
+          <Link className="button secondary" to={localePath(`/hotels/${hotel.slug}`)}>
+            {t("common.viewHotel")}
           </Link>
-          <WhatsAppButton phone={hotel.whatsapp} hotelName={hotel.name} text={t("whatsapp.short")} />
+          <WhatsAppButton phone={hotel.whatsapp} hotelName={hotel.name} text={t("common.whatsapp")} />
         </div>
       </div>
     </article>
