@@ -33,6 +33,7 @@ export const areas = [
     name: "Old Batumi",
     title: "Where to stay in Old Batumi",
     image: photo("photo-1566073771259-6a8506099945"),
+    coordinates: { lat: 41.6506, lng: 41.6361 },
     description:
       "Historic streets, restored facades, small cafes and evening walks toward the boulevard. Best for first-time visitors who want atmosphere and walkability.",
     bestFor: ["First-time visitors", "Cafe streets", "Walkable stays", "Couples"],
@@ -62,6 +63,7 @@ export const areas = [
     name: "Boulevard",
     title: "Small hotels near Batumi Boulevard",
     image: photo("photo-1520250497591-112f2f40a3f4"),
+    coordinates: { lat: 41.6431, lng: 41.6235 },
     description:
       "The classic seaside strip with parks, beach cafes and quick access to the promenade. Good for travellers who want the sea close without leaving the city.",
     bestFor: ["Beach walks", "Families", "Short stays", "Central access"],
@@ -91,6 +93,7 @@ export const areas = [
     name: "New Boulevard",
     title: "Where to stay near New Boulevard, Batumi",
     image: photo("photo-1564501049412-61c2a3083791"),
+    coordinates: { lat: 41.6166, lng: 41.6086 },
     description:
       "Modern apartment-style stays, sea-view rooms and longer-stay options south of the old center. Better for space, elevators and newer buildings.",
     bestFor: ["Sea-view rooms", "Longer stays", "Modern apartments", "Families needing space"],
@@ -120,6 +123,7 @@ export const areas = [
     name: "Airport Area",
     title: "Where to stay near Batumi Airport",
     image: photo("photo-1600210492486-724fe5c67fb0"),
+    coordinates: { lat: 41.6109, lng: 41.5993 },
     description:
       "Practical short-stay area for early flights, late arrivals and guests who need parking or quick road access more than nightlife.",
     bestFor: ["Early flights", "Late arrivals", "Parking", "Short stopovers"],
@@ -149,6 +153,7 @@ export const areas = [
     name: "Makhinjauri",
     title: "Small guesthouses in Makhinjauri",
     image: photo("photo-1600585154340-be6161a56a0c"),
+    coordinates: { lat: 41.6816, lng: 41.698 },
     description:
       "A greener, quieter edge of Batumi with practical guesthouses and access toward the botanical garden and northern beaches.",
     bestFor: ["Green surroundings", "Simple guesthouses", "Botanical garden visits", "Car trips"],
@@ -178,6 +183,7 @@ export const areas = [
     name: "Green Cape",
     title: "Garden stays near Green Cape",
     image: photo("photo-1500530855697-b586d89ba3ee"),
+    coordinates: { lat: 41.695, lng: 41.7063 },
     description:
       "A nature-focused area near the botanical garden, better for slow stays, greenery and guests who do not need the city at the door.",
     bestFor: ["Nature", "Garden stays", "Quiet mornings", "Botanical garden"],
@@ -207,6 +213,7 @@ export const areas = [
     name: "Gonio",
     title: "Small hotels and guesthouses in Gonio",
     image: photo("photo-1542314831-068cd1dbfeeb"),
+    coordinates: { lat: 41.5667, lng: 41.5684 },
     description:
       "A quieter beach area south of Batumi, practical for families, car trips and guests who want less city noise.",
     bestFor: ["Quiet beach stays", "Families", "Parking", "Summer trips"],
@@ -236,6 +243,7 @@ export const areas = [
     name: "Kvariati",
     title: "Sea-view stays in Kvariati",
     image: photo("photo-1519046904884-53103b34b206"),
+    coordinates: { lat: 41.5464, lng: 41.5619 },
     description:
       "A quieter coastal village known for hillside views, clear water and small places that suit couples or slow beach trips.",
     bestFor: ["Sea views", "Couples", "Quiet coastal stays", "Hillside rooms"],
@@ -292,6 +300,7 @@ export const hotels = [
     phone: "+995 555 110 001",
     email: "hello@oldtownfamily.example",
     addressApprox: "Old Batumi side street, near Europe Square",
+    coordinates: { lat: 41.6503, lng: 41.6361 },
     lastVerified: "June 2026",
     image: photo("photo-1566073771259-6a8506099945"),
     gallery: gallery("Old Town Family Hotel", "Old Batumi", [
@@ -401,6 +410,7 @@ export const hotels = [
     phone: "+995 555 110 002",
     email: "stay@seabreeze.example",
     addressApprox: "Near 6 May Park and Batumi Boulevard",
+    coordinates: { lat: 41.6434, lng: 41.6232 },
     lastVerified: "June 2026",
     image: photo("photo-1520250497591-112f2f40a3f4"),
     gallery: gallery("Sea Breeze Guesthouse", "Boulevard", [
@@ -510,6 +520,7 @@ export const hotels = [
     phone: "+995 555 110 003",
     email: "booking@apartstay.example",
     addressApprox: "New Boulevard area, near Metro City",
+    coordinates: { lat: 41.6166, lng: 41.6079 },
     lastVerified: "June 2026",
     image: photo("photo-1564501049412-61c2a3083791"),
     gallery: gallery("New Boulevard Apart Stay", "New Boulevard", [
@@ -619,6 +630,7 @@ export const hotels = [
     phone: "+995 555 110 004",
     email: "green@gardenmini.example",
     addressApprox: "Green Cape, near the botanical garden road",
+    coordinates: { lat: 41.6955, lng: 41.7068 },
     lastVerified: "June 2026",
     image: photo("photo-1600585154340-be6161a56a0c"),
     gallery: gallery("Green Garden Mini Hotel", "Green Cape", [
@@ -728,6 +740,7 @@ export const hotels = [
     phone: "+995 555 110 005",
     email: "hello@gonioquiet.example",
     addressApprox: "Gonio residential street, near beach road",
+    coordinates: { lat: 41.5663, lng: 41.5678 },
     lastVerified: "June 2026",
     image: photo("photo-1542314831-068cd1dbfeeb"),
     gallery: gallery("Gonio Quiet House", "Gonio", [
@@ -837,6 +850,7 @@ export const hotels = [
     phone: "+995 555 110 006",
     email: "view@kvariatirooms.example",
     addressApprox: "Kvariati hillside road",
+    coordinates: { lat: 41.5462, lng: 41.5627 },
     lastVerified: "June 2026",
     image: photo("photo-1519046904884-53103b34b206"),
     gallery: gallery("Kvariati View Rooms", "Kvariati", [

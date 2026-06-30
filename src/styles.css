@@ -304,7 +304,8 @@ p {
     linear-gradient(0deg, rgba(15, 27, 32, 0.36), transparent 42%),
     var(--hero-image);
   background-position: center;
-  background-size: cover;
+  background-size: 106%;
+  animation: heroDrift 18s ease-in-out infinite alternate;
 }
 
 .hero-copy,
@@ -339,6 +340,136 @@ p {
   flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 1.35rem;
+}
+
+.action-showcase {
+  display: grid;
+  gap: 1.4rem;
+  align-items: center;
+}
+
+.action-copy p {
+  max-width: 620px;
+}
+
+.motion-panel {
+  position: relative;
+  display: grid;
+  gap: 1rem;
+  overflow: hidden;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(circle at 18% 14%, rgba(194, 65, 59, 0.13), transparent 28%),
+    linear-gradient(135deg, rgba(217, 238, 240, 0.86), rgba(255, 253, 248, 0.96));
+  box-shadow: var(--shadow);
+}
+
+.moving-route {
+  position: relative;
+  min-height: 170px;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background:
+    linear-gradient(115deg, rgba(15, 78, 74, 0.1), transparent 42%),
+    linear-gradient(180deg, rgba(255, 253, 248, 0.84), rgba(217, 238, 240, 0.6));
+}
+
+.route-line {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 50%;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--sea-dark), var(--coral), var(--gold));
+  opacity: 0.72;
+}
+
+.route-runner {
+  position: absolute;
+  top: calc(50% - 17px);
+  left: 7%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--surface-strong);
+  color: var(--sea-dark);
+  box-shadow: 0 10px 24px rgba(24, 34, 43, 0.18);
+  animation: routeRunner 7.2s ease-in-out infinite;
+}
+
+.route-stop {
+  position: absolute;
+  left: calc(10% + (var(--stop-index) * 20%));
+  top: calc(50% - 18px);
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 2px solid rgba(255, 253, 248, 0.9);
+  border-radius: 50%;
+  background: var(--sea-dark);
+  color: #fff;
+  font-weight: 900;
+  box-shadow: 0 10px 26px rgba(24, 34, 43, 0.2);
+  transform: translateX(-50%);
+}
+
+.route-stop.active {
+  background: var(--coral);
+  animation: stopPulse 1.6s ease-in-out infinite;
+}
+
+.motion-hotel-card {
+  display: grid;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.85rem;
+  border-radius: var(--radius);
+  background: rgba(255, 253, 248, 0.92);
+  animation: cardArrive 420ms ease both;
+}
+
+.motion-hotel-card img {
+  width: 100%;
+  min-height: 210px;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius);
+  box-shadow: 0 16px 34px rgba(24, 34, 43, 0.12);
+}
+
+.motion-hotel-card h3 {
+  font-family: var(--font-display);
+  font-size: clamp(1.55rem, 4vw, 2.35rem);
+}
+
+.motion-ticker {
+  overflow: hidden;
+  border-top: 1px solid rgba(24, 34, 43, 0.1);
+  padding-top: 0.85rem;
+}
+
+.motion-ticker div {
+  display: flex;
+  width: max-content;
+  gap: 0.65rem;
+  animation: tickerMove 18s linear infinite;
+}
+
+.motion-ticker span {
+  padding: 0.45rem 0.7rem;
+  border-radius: 6px;
+  background: rgba(15, 118, 110, 0.1);
+  color: var(--sea-dark);
+  font-size: 0.84rem;
+  font-weight: 900;
+  white-space: nowrap;
 }
 
 .section,
@@ -1086,6 +1217,243 @@ p {
   align-items: start;
 }
 
+.interactive-map-shell {
+  display: grid;
+  gap: 1rem;
+}
+
+.map-toolbar {
+  display: flex;
+  gap: 0.55rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  scrollbar-width: thin;
+}
+
+.map-toolbar button {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 0.52rem 0.75rem;
+  border: 1px solid rgba(15, 118, 110, 0.22);
+  border-radius: 6px;
+  background: var(--surface-strong);
+  color: var(--sea-dark);
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.map-toolbar button.active {
+  background: var(--sea-dark);
+  color: #fff;
+}
+
+.map-experience {
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+}
+
+.leaflet-map-frame {
+  position: relative;
+  min-height: 560px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--sky);
+  box-shadow: var(--shadow);
+}
+
+.leaflet-map {
+  width: 100%;
+  min-height: 560px;
+  height: min(68svh, 720px);
+  z-index: 0;
+}
+
+.leaflet-container {
+  font-family: var(--font-sans);
+  color: var(--ink);
+}
+
+.leaflet-popup-content {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 180px;
+  margin: 0.8rem 0.9rem;
+}
+
+.leaflet-popup-content strong {
+  color: var(--ink);
+}
+
+.leaflet-popup-content span {
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 750;
+}
+
+.leaflet-popup-content a {
+  color: var(--sea-dark);
+  font-weight: 900;
+}
+
+.hotel-map-marker-wrap {
+  background: transparent;
+  border: 0;
+}
+
+.hotel-map-marker {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 2px solid #fff;
+  border-radius: 50% 50% 50% 10px;
+  background: var(--sea-dark);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 950;
+  box-shadow: 0 12px 28px rgba(24, 34, 43, 0.26);
+  transform: rotate(-45deg);
+  animation: mapPinBounce 2.4s ease-in-out infinite;
+}
+
+.hotel-map-marker::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border: 1px solid rgba(15, 118, 110, 0.36);
+  border-radius: inherit;
+  animation: mapPinPulse 2.4s ease-out infinite;
+}
+
+.hotel-map-marker.active {
+  background: var(--coral);
+}
+
+.hotel-map-marker-wrap:nth-child(2n) .hotel-map-marker {
+  animation-delay: 180ms;
+}
+
+.hotel-map-marker-wrap:nth-child(3n) .hotel-map-marker {
+  animation-delay: 360ms;
+}
+
+.hotel-map-marker {
+  line-height: 1;
+}
+
+.hotel-map-marker > span {
+  transform: rotate(45deg);
+}
+
+.map-loading,
+.map-help {
+  position: absolute;
+  z-index: 401;
+  border-radius: 6px;
+  background: rgba(255, 253, 248, 0.94);
+  color: var(--sea-dark);
+  font-size: 0.84rem;
+  font-weight: 900;
+  box-shadow: 0 12px 28px rgba(24, 34, 43, 0.12);
+}
+
+.map-loading {
+  inset: 1rem auto auto 1rem;
+  padding: 0.65rem 0.8rem;
+}
+
+.map-help {
+  right: 1rem;
+  bottom: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  padding: 0.55rem 0.7rem;
+}
+
+.map-hotel-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.selected-map-hotel {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-strong);
+  box-shadow: 0 14px 38px rgba(24, 34, 43, 0.08);
+}
+
+.selected-map-hotel img {
+  width: 100%;
+  min-height: 220px;
+  aspect-ratio: 16 / 10;
+}
+
+.selected-map-hotel > div {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.selected-map-hotel h2 {
+  margin-bottom: 0;
+  font-size: clamp(1.8rem, 5vw, 2.75rem);
+}
+
+.selected-map-hotel p {
+  margin-bottom: 0;
+}
+
+.map-hotel-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.map-hotel-list button {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.18rem 0.65rem;
+  align-items: center;
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-strong);
+  text-align: left;
+}
+
+.map-hotel-list button.active {
+  border-color: rgba(194, 65, 59, 0.48);
+  background: rgba(194, 65, 59, 0.08);
+}
+
+.map-hotel-list span {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--sea-dark);
+  color: #fff;
+  font-weight: 900;
+}
+
+.map-hotel-list strong {
+  color: var(--ink);
+}
+
+.map-hotel-list em {
+  color: var(--muted);
+  font-style: normal;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
 .map-board {
   min-height: 560px;
 }
@@ -1225,6 +1593,10 @@ p {
 }
 
 @media (min-width: 700px) {
+  .motion-hotel-card {
+    grid-template-columns: 0.92fr 1.08fr;
+  }
+
   .intent-grid,
   .hotel-grid,
   .collection-grid,
@@ -1299,6 +1671,10 @@ p {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
+  .action-showcase {
+    grid-template-columns: 0.78fr 1.22fr;
+  }
+
   .hotel-grid,
   .guide-grid,
   .service-icons,
@@ -1339,8 +1715,9 @@ p {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-  .map-layout {
-    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  .map-layout,
+  .map-experience {
+    grid-template-columns: minmax(0, 0.96fr) 380px;
   }
 
   .site-footer {
@@ -1387,6 +1764,15 @@ html[dir="rtl"] .toc-panel ol {
   padding-left: 0;
 }
 
+html[dir="rtl"] .map-hotel-list button {
+  text-align: right;
+}
+
+html[dir="rtl"] .map-help {
+  right: auto;
+  left: 1rem;
+}
+
 @media (max-width: 899px) {
   body {
     padding-bottom: 0;
@@ -1401,7 +1787,80 @@ html[dir="rtl"] .toc-panel ol {
   *,
   *::before,
   *::after {
+    animation: none !important;
     scroll-behavior: auto !important;
     transition: none !important;
+  }
+}
+
+@keyframes heroDrift {
+  from {
+    background-position: center center;
+    background-size: 106%;
+  }
+  to {
+    background-position: 52% 48%;
+    background-size: 112%;
+  }
+}
+
+@keyframes routeRunner {
+  0%,
+  100% {
+    left: 7%;
+  }
+  50% {
+    left: 88%;
+  }
+}
+
+@keyframes stopPulse {
+  0%,
+  100% {
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    transform: translateX(-50%) scale(1.12);
+  }
+}
+
+@keyframes cardArrive {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tickerMove {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes mapPinBounce {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-45deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(-45deg);
+  }
+}
+
+@keyframes mapPinPulse {
+  from {
+    opacity: 0.62;
+    transform: scale(0.72);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.55);
   }
 }

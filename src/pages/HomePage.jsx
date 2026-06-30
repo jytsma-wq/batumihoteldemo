@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { BedDouble, Car, MapPinned, Search, ShieldCheck, Sparkles, Waves } from "lucide-react";
+import ActionShowcase from "../components/ActionShowcase.jsx";
 import AreaCard from "../components/AreaCard.jsx";
 import CollectionCard from "../components/CollectionCard.jsx";
 import GuideCard from "../components/GuideCard.jsx";
@@ -48,6 +49,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <ActionShowcase />
 
       <section className="section intent-section">
         <div className="section-heading split">
