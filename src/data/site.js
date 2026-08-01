@@ -1,12 +1,8 @@
 export const SITE_URL = "https://jytsma-wq.github.io/batumihoteldemo";
 
+// Publish a locale only after both its UI dictionary and its hotel content are complete.
 export const locales = [
-  { code: "en", label: "English", nativeName: "English", htmlLang: "en", dir: "ltr" },
-  { code: "ru", label: "Russian", nativeName: "Русский", htmlLang: "ru", dir: "ltr" },
-  { code: "ka", label: "Georgian", nativeName: "ქართული", htmlLang: "ka", dir: "ltr" },
-  { code: "tr", label: "Turkish", nativeName: "Türkçe", htmlLang: "tr", dir: "ltr" },
-  { code: "he", label: "Hebrew", nativeName: "עברית", htmlLang: "he", dir: "rtl" },
-  { code: "ar", label: "Arabic", nativeName: "العربية", htmlLang: "ar", dir: "rtl" }
+  { code: "en", label: "English", nativeName: "English", htmlLang: "en", dir: "ltr" }
 ];
 
 export const defaultLocale = "en";

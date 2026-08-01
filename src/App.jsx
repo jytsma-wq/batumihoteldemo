@@ -22,6 +22,8 @@ function LanguageSwitcher() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  if (languages.length < 2) return null;
+
   function handleChange(event) {
     const nextLanguage = event.target.value;
     setLanguage(nextLanguage);
