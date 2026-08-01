@@ -1,4 +1,4 @@
-import { access, readFile } from "node:fs/promises";
+import { access, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -271,6 +271,33 @@ for (const code of [...localeCodes, "x-default"]) {
 if (!staticMain(rootHtml)) failures.push("root: missing static main content");
 checkHeading(rootHtml, routeHeading(routesByPath.get("/"), defaultSite, defaultLocale), "root");
 await checkInternalLinks(rootHtml, "root", defaultLocale);
+
+const rootModuleScript = rootHtml.match(/<script\s[^>]*type="module"[^>]*>/i)?.[0] ?? "";
+const rootModuleSource = firstMatch(rootModuleScript, /src="([^"]+)"/i);
+if (!rootModuleSource) {
+  failures.push("root: missing module entrypoint");
+} else {
+  const entryPathname = new URL(rootModuleSource, `${SITE_URL}/`).pathname;
+  const entryRelativePath = entryPathname.slice(appBase.length).replace(/^\/+/, "");
+  try {
+    const entryStats = await stat(path.join(distDir, entryRelativePath));
+    if (entryStats.size > 500_000) {
+      failures.push(`bundle: main entrypoint is ${entryStats.size} bytes; locale splitting regressed`);
+    }
+  } catch {
+    failures.push(`root: missing module entrypoint target ${rootModuleSource}`);
+  }
+}
+
+const localePreloadPattern = new RegExp(
+  `/assets/(?:${localeCodes.join("|")})-[^"']+\\.js`,
+  "i"
+);
+for (const match of rootHtml.matchAll(/<link\s[^>]*rel="modulepreload"[^>]*href="([^"]+)"/gi)) {
+  if (localePreloadPattern.test(match[1])) {
+    failures.push(`bundle: locale chunk must load on demand, not via modulepreload: ${match[1]}`);
+  }
+}
 
 for (const alias of legacyAliases) {
   const targetLocalizedPath = localePath(defaultLocale, alias.targetPath);

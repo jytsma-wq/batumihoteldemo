@@ -123,6 +123,40 @@ p {
   backdrop-filter: blur(16px);
 }
 
+.locale-content-loading {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.locale-loading-overlay {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(37, 139, 148, 0.14), transparent 12rem),
+    var(--bg);
+}
+
+.locale-loading-overlay::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid rgba(37, 139, 148, 0.2);
+  border-top-color: var(--sea);
+  border-radius: 50%;
+  content: "";
+  transform: translate(-50%, -50%);
+  animation: locale-loading-spin 0.8s linear infinite;
+}
+
+@keyframes locale-loading-spin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
 .brand {
   display: inline-flex;
   align-items: center;

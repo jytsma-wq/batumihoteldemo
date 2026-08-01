@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, Navigate, NavLink, Outlet, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import HomePage from "./pages/HomePage.jsx";
@@ -16,6 +16,7 @@ import GuideDetailPage from "./pages/GuideDetailPage.jsx";
 import AboutPage from "./pages/AboutPage.jsx";
 import LegalPage from "./pages/LegalPage.jsx";
 import { isLocale, switchLocalePath, useI18n, useLocalePath, useLocaleSync } from "./i18n.jsx";
+import { loadLocaleResources } from "./locale-resources.js";
 
 function LocaleGuard() {
   const { locale } = useParams();
@@ -23,20 +24,34 @@ function LocaleGuard() {
 }
 
 function LanguageSwitcher() {
-  const { language, languages, setLanguage, t } = useI18n();
+  const { activateLanguage, language, languages, t } = useI18n();
   const location = useLocation();
   const navigate = useNavigate();
+  const latestChange = useRef(0);
+
+  useEffect(() => {
+    latestChange.current += 1;
+  }, [location.hash, location.pathname, location.search]);
 
   if (languages.length < 2) return null;
 
-  function handleChange(event) {
+  async function handleChange(event) {
     const nextLanguage = event.target.value;
-    setLanguage(nextLanguage);
-    navigate({
-      pathname: switchLocalePath(location.pathname, nextLanguage),
-      search: location.search,
-      hash: location.hash
-    });
+    const request = ++latestChange.current;
+    try {
+      const resources = await loadLocaleResources(nextLanguage);
+      if (request !== latestChange.current) return;
+      activateLanguage(nextLanguage, resources);
+      navigate({
+        pathname: switchLocalePath(location.pathname, nextLanguage),
+        search: location.search,
+        hash: location.hash
+      });
+    } catch (error) {
+      if (request === latestChange.current) {
+        console.error(`Unable to load locale: ${nextLanguage}`, error);
+      }
+    }
   }
 
   return (
@@ -149,39 +164,64 @@ function Footer() {
 export default function App() {
   const location = useLocation();
   const { language } = useI18n();
+  const navigate = useNavigate();
+  const displayedLocation = useRef(location);
 
-  useLocaleSync(location.pathname);
+  const handleLocaleLoadError = useCallback(
+    (error, targetLanguage) => {
+      console.error(`Unable to activate locale: ${targetLanguage}`, error);
+      navigate(
+        {
+          pathname: switchLocalePath(location.pathname, language),
+          search: location.search,
+          hash: location.hash
+        },
+        { replace: true }
+      );
+    },
+    [language, location.hash, location.pathname, location.search, navigate]
+  );
+
+  const localeReady = useLocaleSync(location.pathname, handleLocaleLoadError);
+
+  if (localeReady) displayedLocation.current = location;
 
   return (
     <>
-      <Header />
-      <Routes>
-        <Route path="/" element={<Navigate to={`/${language}/`} replace />} />
-        <Route path="/hotels" element={<Navigate to={`/${language}/hotels`} replace />} />
-        <Route path="/hotels/:slug" element={<Navigate to={`/${language}${location.pathname}`} replace />} />
-        <Route path="/for-hotel-owners" element={<Navigate to={`/${language}/for-property-owners`} replace />} />
-        <Route path="/contact" element={<Navigate to={`/${language}/contact`} replace />} />
+      <div
+        className={localeReady ? "locale-content" : "locale-content locale-content-loading"}
+        aria-hidden={localeReady ? undefined : true}
+      >
+        <Header />
+        <Routes location={displayedLocation.current}>
+          <Route path="/" element={<Navigate to={`/${language}/`} replace />} />
+          <Route path="/hotels" element={<Navigate to={`/${language}/hotels`} replace />} />
+          <Route path="/hotels/:slug" element={<Navigate to={`/${language}${location.pathname}`} replace />} />
+          <Route path="/for-hotel-owners" element={<Navigate to={`/${language}/for-property-owners`} replace />} />
+          <Route path="/contact" element={<Navigate to={`/${language}/contact`} replace />} />
 
-        <Route path="/:locale" element={<LocaleGuard />}>
-          <Route index element={<HomePage />} />
-          <Route path="hotels" element={<HotelsPage />} />
-          <Route path="hotels/:slug" element={<HotelDetailPage />} />
-          <Route path="areas" element={<AreasPage />} />
-          <Route path="areas/:slug" element={<AreaDetailPage />} />
-          <Route path="collections" element={<CollectionsPage />} />
-          <Route path="collections/:slug" element={<CollectionDetailPage />} />
-          <Route path="map" element={<MapPage />} />
-          <Route path="guide" element={<GuidePage />} />
-          <Route path="guide/:slug" element={<GuideDetailPage />} />
-          <Route path="about" element={<AboutPage />} />
-          <Route path="contact" element={<ContactPage />} />
-          <Route path="for-property-owners" element={<OwnersPage />} />
-          <Route path="privacy" element={<LegalPage type="privacy" />} />
-          <Route path="terms" element={<LegalPage type="terms" />} />
-        </Route>
-        <Route path="*" element={<Navigate to={`/${language}/`} replace />} />
-      </Routes>
-      <Footer />
+          <Route path="/:locale" element={<LocaleGuard />}>
+            <Route index element={<HomePage />} />
+            <Route path="hotels" element={<HotelsPage />} />
+            <Route path="hotels/:slug" element={<HotelDetailPage />} />
+            <Route path="areas" element={<AreasPage />} />
+            <Route path="areas/:slug" element={<AreaDetailPage />} />
+            <Route path="collections" element={<CollectionsPage />} />
+            <Route path="collections/:slug" element={<CollectionDetailPage />} />
+            <Route path="map" element={<MapPage />} />
+            <Route path="guide" element={<GuidePage />} />
+            <Route path="guide/:slug" element={<GuideDetailPage />} />
+            <Route path="about" element={<AboutPage />} />
+            <Route path="contact" element={<ContactPage />} />
+            <Route path="for-property-owners" element={<OwnersPage />} />
+            <Route path="privacy" element={<LegalPage type="privacy" />} />
+            <Route path="terms" element={<LegalPage type="terms" />} />
+          </Route>
+          <Route path="*" element={<Navigate to={`/${language}/`} replace />} />
+        </Routes>
+        <Footer />
+      </div>
+      {!localeReady && <div className="locale-loading-overlay" aria-busy="true" />}
     </>
   );
 }
