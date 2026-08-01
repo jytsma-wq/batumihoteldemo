@@ -4,7 +4,7 @@ export default function PricingCard({ title, price, note, items }) {
   return (
     <article className="pricing-card">
       <h3>{title}</h3>
-      <strong>{price}</strong>
+      <strong><bdi dir="ltr">{price}</bdi></strong>
       <p>{note}</p>
       <ul>
         {items.map((item) => (

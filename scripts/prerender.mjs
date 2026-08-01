@@ -1,43 +1,63 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
 import {
   SITE_URL,
-  areas,
-  collectionHotels,
-  collections,
+  areas as baseAreas,
+  collections as baseCollections,
   defaultLocale,
-  filterHotels,
-  getArea,
-  getCollection,
-  getGuide,
-  getHotel,
-  guides,
-  hotels,
+  guides as baseGuides,
+  hotels as baseHotels,
   locales
 } from "../src/data/site.js";
+import { createLocalizedSiteData } from "../src/data/localized-site.js";
+import { ui } from "../src/messages.js";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const distDir = path.join(rootDir, "dist");
 const template = await readFile(path.join(distDir, "index.html"), "utf8");
 const localeCodes = locales.map((locale) => locale.code);
+const appBase = new URL(SITE_URL).pathname.replace(/\/$/, "");
 
 const staticRoutes = [
   { path: "/", kind: "home" },
   { path: "/hotels", kind: "hotels" },
-  ...hotels.map((hotel) => ({ path: `/hotels/${hotel.slug}`, kind: "hotel", slug: hotel.slug })),
+  ...baseHotels.map((hotel) => ({ path: `/hotels/${hotel.slug}`, kind: "hotel", slug: hotel.slug })),
   { path: "/areas", kind: "areas" },
-  ...areas.map((area) => ({ path: `/areas/${area.slug}`, kind: "area", slug: area.slug })),
+  ...baseAreas.map((area) => ({ path: `/areas/${area.slug}`, kind: "area", slug: area.slug })),
   { path: "/collections", kind: "collections" },
-  ...collections.map((collection) => ({ path: `/collections/${collection.slug}`, kind: "collection", slug: collection.slug })),
+  ...baseCollections.map((collection) => ({ path: `/collections/${collection.slug}`, kind: "collection", slug: collection.slug })),
   { path: "/map", kind: "map" },
   { path: "/guide", kind: "guide" },
-  ...guides.map((guide) => ({ path: `/guide/${guide.slug}`, kind: "guide-detail", slug: guide.slug })),
+  ...baseGuides.map((guide) => ({ path: `/guide/${guide.slug}`, kind: "guide-detail", slug: guide.slug })),
   { path: "/about", kind: "about" },
   { path: "/contact", kind: "contact" },
   { path: "/for-property-owners", kind: "owners" },
   { path: "/privacy", kind: "privacy" },
   { path: "/terms", kind: "terms" }
+];
+
+const overviewHeadingKeys = {
+  home: "home.title",
+  hotels: "hotelsPage.title",
+  areas: "areas.indexTitle",
+  collections: "collections.indexTitle",
+  map: "map.title",
+  guide: "guide.indexTitle",
+  about: "about.title",
+  contact: "contact.title",
+  owners: "owners.h1"
+};
+
+const legacyAliases = [
+  { path: "/hotels", targetPath: "/hotels" },
+  ...baseHotels.map((hotel) => ({
+    path: `/hotels/${hotel.slug}`,
+    targetPath: `/hotels/${hotel.slug}`
+  })),
+  { path: "/contact", targetPath: "/contact" },
+  { path: "/for-hotel-owners", targetPath: "/for-property-owners" }
 ];
 
 function escapeHtml(value = "") {
@@ -53,8 +73,22 @@ function stripHtml(value = "") {
   return String(value).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 }
 
+function getNestedValue(source, key) {
+  return key.split(".").reduce((current, part) => current?.[part], source);
+}
+
+function message(locale, key, params = {}) {
+  const value = getNestedValue(ui[locale], key);
+  if (typeof value !== "string") throw new Error(`Missing prerender message: ${locale}.${key}`);
+  return value.replace(/\{\{(\w+)\}\}/g, (_, name) => String(params[name] ?? ""));
+}
+
 function localePath(locale, routePath) {
   return `/${locale}${routePath === "/" ? "/" : routePath}`;
+}
+
+function appPath(locale, routePath) {
+  return `${appBase}${localePath(locale, routePath)}`;
 }
 
 function absoluteUrl(routePath) {
@@ -71,140 +105,47 @@ function listItems(items, mapper) {
 }
 
 function links(items, mapper) {
-  return items.map((item) => {
-    const { href, label } = mapper(item);
-    return `<a href="${escapeHtml(href)}">${escapeHtml(label)}</a>`;
-  }).join(" ");
+  return items
+    .map((item) => {
+      const { href, label } = mapper(item);
+      return `<a href="${escapeHtml(href)}">${isolatedName(label)}</a>`;
+    })
+    .join(" ");
 }
 
-function routeMeta(route) {
-  if (route.kind === "hotel") {
-    const hotel = getHotel(route.slug);
-    return {
-      title: `${hotel.name} - small ${hotel.type.toLowerCase()} in ${hotel.areaName}, Batumi`,
-      description: hotel.shortDescription,
-      image: hotel.image,
-      schema: hotelSchema(hotel)
-    };
-  }
+function isolatedName(name) {
+  return `<bdi>${escapeHtml(name)}</bdi>`;
+}
 
-  if (route.kind === "area") {
-    const area = getArea(route.slug);
-    return {
-      title: `${area.title} | Small Hotels Batumi`,
-      description: area.description,
-      image: area.image,
-      schema: itemListSchema(filterHotels({ areaSlug: area.slug }), "Hotels in " + area.name)
-    };
-  }
+function inferCollectionPath(item) {
+  if (item.areaSlug) return `hotels/${item.slug}`;
+  if (item.bestAreas) return `collections/${item.slug}`;
+  if (item.readingTime) return `guide/${item.slug}`;
+  return `areas/${item.slug}`;
+}
 
-  if (route.kind === "collection") {
-    const collection = getCollection(route.slug);
-    return {
-      title: `${collection.h1} | Small Hotels Batumi`,
-      description: collection.description,
-      image: hotels[0].image,
-      schema: itemListSchema(collectionHotels(collection), collection.title)
-    };
-  }
-
-  if (route.kind === "guide-detail") {
-    const guide = getGuide(route.slug);
-    return {
-      title: `${guide.title} | Small Hotels Batumi`,
-      description: guide.description,
-      image: hotels[2].image,
-      schema: {
-        "@context": "https://schema.org",
-        "@type": "Article",
-        headline: guide.title,
-        description: guide.description,
-        dateModified: guide.updated,
-        inLanguage: "en"
-      }
-    };
-  }
-
-  const common = {
-    home: {
-      title: "Small hotels in Batumi - independent guesthouses, rooms and local stays",
-      description:
-        "Traveller-first guide to independent hotels, guesthouses and local rooms in Batumi, Georgia.",
-      image: hotels[2].image
-    },
-    hotels: {
-      title: "Small hotels and guesthouses in Batumi | Small Hotels Batumi",
-      description:
-        "Browse independent hotels, guesthouses, mini hotels and local rooms across Batumi by area, budget and practical trip needs.",
-      image: hotels[0].image,
-      schema: itemListSchema(hotels, "Small hotels and guesthouses in Batumi")
-    },
-    areas: {
-      title: "Where to stay in Batumi | Small Hotels Batumi",
-      description:
-        "Compare Old Batumi, Boulevard, New Boulevard, Gonio, Kvariati, Makhinjauri and other Batumi accommodation areas.",
-      image: areas[0].image,
-      schema: itemListSchema(areas, "Batumi accommodation areas")
-    },
-    collections: {
-      title: "Batumi hotel collections by travel intent | Small Hotels Batumi",
-      description:
-        "Find Batumi stays by beach access, family travel, quiet areas, sea views, parking, airport access and budget.",
-      image: hotels[1].image,
-      schema: itemListSchema(collections, "Batumi hotel collections")
-    },
-    map: {
-      title: "Small hotels by Batumi area map | Small Hotels Batumi",
-      description:
-        "Map-style guide to small hotels and guesthouses by approximate Batumi area.",
-      image: areas[2].image
-    },
-    guide: {
-      title: "Batumi accommodation guide | Small Hotels Batumi",
-      description:
-        "Practical local advice for choosing where to stay in Batumi, from old-town streets to quieter beach villages.",
-      image: hotels[4].image,
-      schema: itemListSchema(guides, "Batumi accommodation guides")
-    },
-    about: {
-      title: "About Small Hotels Batumi",
-      description:
-        "A local accommodation guide for travellers who prefer independent stays, practical details and direct contact.",
-      image: hotels[0].image
-    },
-    contact: {
-      title: "Ask for local accommodation advice | Small Hotels Batumi",
-      description:
-        "Contact Small Hotels Batumi for local advice on areas, shortlists and direct small-hotel requests.",
-      image: hotels[1].image
-    },
-    owners: {
-      title: "For property owners | Small Hotels Batumi",
-      description:
-        "Information for local property owners who want a clearer hotel page and direct traveller requests.",
-      image: hotels[3].image
-    },
-    privacy: {
-      title: "Privacy | Small Hotels Batumi",
-      description: "Privacy information for Small Hotels Batumi.",
-      image: hotels[0].image
-    },
-    terms: {
-      title: "Terms | Small Hotels Batumi",
-      description: "Terms information for Small Hotels Batumi.",
-      image: hotels[0].image
-    }
+function itemListSchema(items, name, locale) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name,
+    inLanguage: locale,
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name ?? item.title,
+      url: absoluteUrl(localePath(locale, `/${inferCollectionPath(item)}`))
+    }))
   };
-
-  return common[route.kind];
 }
 
-function hotelSchema(hotel) {
+function hotelSchema(hotel, locale) {
   return {
     "@context": "https://schema.org",
     "@type": "Hotel",
     name: hotel.name,
     description: hotel.shortDescription,
+    inLanguage: locale,
     image: hotel.gallery.map((image) => image.src),
     address: {
       "@type": "PostalAddress",
@@ -221,47 +162,193 @@ function hotelSchema(hotel) {
   };
 }
 
-function itemListSchema(items, name) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    name,
-    itemListElement: items.map((item, index) => ({
-      "@type": "ListItem",
-      position: index + 1,
-      name: item.name ?? item.title,
-      url: item.slug ? absoluteUrl(`/en/${inferCollectionPath(item)}`) : SITE_URL
-    }))
+function routeMeta(route, site, locale) {
+  const suffix = " | Small Hotels Batumi";
+
+  if (route.kind === "hotel") {
+    const hotel = site.getHotel(route.slug);
+    return {
+      title: message(locale, "detail.metaTitle", {
+        hotelName: hotel.name,
+        hotelType: hotel.typeLabel.toLowerCase(),
+        areaName: hotel.areaLabel
+      }),
+      description: hotel.shortDescription,
+      image: hotel.image,
+      schema: hotelSchema(hotel, locale)
+    };
+  }
+
+  if (route.kind === "area") {
+    const area = site.getArea(route.slug);
+    return {
+      title: `${area.title}${suffix}`,
+      description: area.description,
+      image: area.image,
+      schema: itemListSchema(site.filterHotels({ areaSlug: area.slug }), `${area.title}`, locale)
+    };
+  }
+
+  if (route.kind === "collection") {
+    const collection = site.getCollection(route.slug);
+    return {
+      title: `${collection.h1}${suffix}`,
+      description: collection.description,
+      image: site.hotels[0].image,
+      schema: itemListSchema(site.collectionHotels(collection), collection.title, locale)
+    };
+  }
+
+  if (route.kind === "guide-detail") {
+    const guide = site.getGuide(route.slug);
+    return {
+      title: `${guide.title}${suffix}`,
+      description: guide.description,
+      image: site.hotels[2].image,
+      schema: {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        headline: guide.title,
+        description: guide.description,
+        dateModified: guide.updated,
+        inLanguage: locale
+      }
+    };
+  }
+
+  const common = {
+    home: {
+      title: `${message(locale, "home.title")}${suffix}`,
+      description: message(locale, "home.subtitle"),
+      image: site.hotels[2].image
+    },
+    hotels: {
+      title: `${message(locale, "hotelsPage.title")}${suffix}`,
+      description: message(locale, "hotelsPage.intro"),
+      image: site.hotels[0].image,
+      schema: itemListSchema(site.hotels, message(locale, "hotelsPage.title"), locale)
+    },
+    areas: {
+      title: `${message(locale, "areas.indexTitle")}${suffix}`,
+      description: message(locale, "areas.indexIntro"),
+      image: site.areas[0].image,
+      schema: itemListSchema(site.areas, message(locale, "areas.indexTitle"), locale)
+    },
+    collections: {
+      title: `${message(locale, "collections.indexTitle")}${suffix}`,
+      description: message(locale, "collections.indexIntro"),
+      image: site.hotels[1].image,
+      schema: itemListSchema(site.collections, message(locale, "collections.indexTitle"), locale)
+    },
+    map: {
+      title: `${message(locale, "map.title")}${suffix}`,
+      description: message(locale, "map.intro"),
+      image: site.areas[2].image
+    },
+    guide: {
+      title: `${message(locale, "guide.indexTitle")}${suffix}`,
+      description: message(locale, "guide.indexIntro"),
+      image: site.hotels[4].image,
+      schema: itemListSchema(site.guides, message(locale, "guide.indexTitle"), locale)
+    },
+    about: {
+      title: `${message(locale, "about.title")}${suffix}`,
+      description: message(locale, "about.intro"),
+      image: site.hotels[0].image
+    },
+    contact: {
+      title: `${message(locale, "contact.title")}${suffix}`,
+      description: message(locale, "contact.intro"),
+      image: site.hotels[1].image
+    },
+    owners: {
+      title: `${message(locale, "owners.title")}${suffix}`,
+      description: message(locale, "owners.intro"),
+      image: site.hotels[3].image
+    },
+    privacy: {
+      title: `${message(locale, "legal.privacyTitle")}${suffix}`,
+      description: message(locale, "legal.description", { title: message(locale, "legal.privacyTitle") }),
+      image: site.hotels[0].image
+    },
+    terms: {
+      title: `${message(locale, "legal.termsTitle")}${suffix}`,
+      description: message(locale, "legal.description", { title: message(locale, "legal.termsTitle") }),
+      image: site.hotels[0].image
+    }
   };
+
+  return common[route.kind];
 }
 
-function inferCollectionPath(item) {
-  if (item.areaSlug) return `hotels/${item.slug}`;
-  if (item.bestAreas) return `collections/${item.slug}`;
-  if (item.readingTime) return `guide/${item.slug}`;
-  return `areas/${item.slug}`;
+function routeLabel(route, site, locale) {
+  if (route.kind === "hotel") return site.getHotel(route.slug).name;
+  if (route.kind === "area") return site.getArea(route.slug).title;
+  if (route.kind === "collection") return site.getCollection(route.slug).h1;
+  if (route.kind === "guide-detail") return site.getGuide(route.slug).title;
+  const labels = {
+    home: message(locale, "common.home"),
+    hotels: message(locale, "nav.hotels"),
+    areas: message(locale, "nav.areas"),
+    collections: message(locale, "nav.collections"),
+    map: message(locale, "nav.map"),
+    guide: message(locale, "nav.guide"),
+    about: message(locale, "nav.about"),
+    contact: message(locale, "footer.contact"),
+    owners: message(locale, "owners.title"),
+    privacy: message(locale, "legal.privacyTitle"),
+    terms: message(locale, "legal.termsTitle")
+  };
+  return labels[route.kind];
 }
 
-function breadcrumbSchema(locale, routePath, route) {
-  const parts = routePath.split("/").filter(Boolean).slice(1);
+function routeHeading(route, site, locale) {
+  if (route.kind === "hotel") {
+    const hotel = site.getHotel(route.slug);
+    return message(locale, "detail.metaTitle", {
+      hotelName: hotel.name,
+      hotelType: hotel.typeLabel.toLowerCase(),
+      areaName: hotel.areaLabel
+    });
+  }
+  if (route.kind === "area") return site.getArea(route.slug).title;
+  if (route.kind === "collection") return site.getCollection(route.slug).h1;
+  if (route.kind === "guide-detail") return site.getGuide(route.slug).title;
+  if (overviewHeadingKeys[route.kind]) return message(locale, overviewHeadingKeys[route.kind]);
+  if (route.kind === "privacy") return message(locale, "legal.privacyTitle");
+  if (route.kind === "terms") return message(locale, "legal.termsTitle");
+  throw new Error(`Missing prerender heading for route kind: ${route.kind}`);
+}
+
+function breadcrumbSchema(locale, route, site) {
+  const routeParts = route.path.split("/").filter(Boolean);
   const elements = [
     {
       "@type": "ListItem",
       position: 1,
-      name: "Home",
+      name: message(locale, "common.home"),
       item: absoluteUrl(localePath(locale, "/"))
     }
   ];
 
-  parts.forEach((part, index) => {
-    const pathPart = `/${[locale, ...parts.slice(0, index + 1)].join("/")}`;
+  if (routeParts.length) {
+    const sectionKinds = { hotels: "hotels", areas: "areas", collections: "collections", guide: "guide" };
+    const section = routeParts[0];
+    if (routeParts.length > 1 && sectionKinds[section]) {
+      elements.push({
+        "@type": "ListItem",
+        position: 2,
+        name: routeLabel({ kind: sectionKinds[section] }, site, locale),
+        item: absoluteUrl(localePath(locale, `/${section}`))
+      });
+    }
     elements.push({
       "@type": "ListItem",
-      position: index + 2,
-      name: index === parts.length - 1 ? routeMeta(route).title.replace(" | Small Hotels Batumi", "") : part,
-      item: absoluteUrl(pathPart)
+      position: elements.length + 1,
+      name: routeLabel(route, site, locale),
+      item: absoluteUrl(localePath(locale, route.path))
     });
-  });
+  }
 
   return {
     "@context": "https://schema.org",
@@ -270,148 +357,81 @@ function breadcrumbSchema(locale, routePath, route) {
   };
 }
 
-function faqSchema(faqs) {
+function faqSchema(faqs, locale) {
   if (!faqs?.length) return null;
   return {
     "@context": "https://schema.org",
     "@type": "FAQPage",
+    inLanguage: locale,
     mainEntity: faqs.map((faq) => ({
       "@type": "Question",
       name: faq.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: faq.answer
-      }
+      acceptedAnswer: { "@type": "Answer", text: faq.answer }
     }))
   };
 }
 
-function routeFaqs(route) {
-  if (route.kind === "hotel") return getHotel(route.slug).faqs;
-  if (route.kind === "area") return getArea(route.slug).faqs;
+function routeFaqs(route, site) {
+  if (route.kind === "hotel") return site.getHotel(route.slug).faqs;
+  if (route.kind === "area") return site.getArea(route.slug).faqs;
   return [];
 }
 
-function pageStaticMarkup(route, localeRoutePath) {
-  const meta = routeMeta(route);
-  const title = escapeHtml(meta.title);
+function pageStaticMarkup(route, site, locale) {
+  const meta = routeMeta(route, site, locale);
+  const heading = escapeHtml(routeHeading(route, site, locale));
   const description = escapeHtml(meta.description);
 
   if (route.kind === "hotel") {
-    const hotel = getHotel(route.slug);
-    return `
-      <main class="seo-static">
-        <h1>${title}</h1>
-        <p>${description}</p>
-        <p><strong>Area:</strong> ${escapeHtml(hotel.areaName)}. <strong>Beach:</strong> ${escapeHtml(hotel.distanceToBeach)}. <strong>From:</strong> ${hotel.priceFromGel} GEL.</p>
-        <h2>Rooms</h2>
-        ${listItems(hotel.rooms, (room) => `${escapeHtml(room.name)} - sleeps ${room.sleeps}, ${escapeHtml(room.beds)}, ${escapeHtml(room.goodFor)}`)}
-        <h2>Good to know</h2>
-        ${listItems(hotel.goodToKnow, escapeHtml)}
-        <h2>FAQ</h2>
-        ${listItems(hotel.faqs, (faq) => `<strong>${escapeHtml(faq.question)}</strong> ${escapeHtml(faq.answer)}`)}
-      </main>`;
+    const hotel = site.getHotel(route.slug);
+    return `<main class="seo-static"><h1>${heading}</h1><p>${description}</p>
+      <p><strong>${escapeHtml(message(locale, "detail.area"))}:</strong> ${escapeHtml(hotel.areaLabel)}. <strong>${escapeHtml(message(locale, "detail.beach"))}:</strong> ${escapeHtml(hotel.distanceToBeach)}. <strong>${escapeHtml(message(locale, "common.from"))}</strong> ${hotel.priceFromGel} GEL.</p>
+      <h2>${escapeHtml(message(locale, "detail.rooms"))}</h2>${listItems(hotel.rooms, (room) => `${escapeHtml(room.name)} — ${escapeHtml(message(locale, "common.sleeps"))} ${room.sleeps}, ${escapeHtml(room.beds)}, ${escapeHtml(room.goodFor)}`)}
+      <h2>${escapeHtml(message(locale, "detail.goodToKnow"))}</h2>${listItems(hotel.goodToKnow, escapeHtml)}
+      <h2>${escapeHtml(message(locale, "detail.faq"))}</h2>${listItems(hotel.faqs, (faq) => `<strong>${escapeHtml(faq.question)}</strong> ${escapeHtml(faq.answer)}`)}</main>`;
   }
 
   if (route.kind === "area") {
-    const area = getArea(route.slug);
-    const areaHotels = filterHotels({ areaSlug: area.slug });
-    return `
-      <main class="seo-static">
-        <h1>${title}</h1>
-        <p>${description}</p>
-        <h2>Best for</h2>
-        ${listItems(area.bestFor, escapeHtml)}
-        <h2>Hotels in this area</h2>
-        <p>${links(areaHotels, (hotel) => ({ href: `/en/hotels/${hotel.slug}`, label: hotel.name }))}</p>
-      </main>`;
+    const area = site.getArea(route.slug);
+    return `<main class="seo-static"><h1>${heading}</h1><p>${description}</p>
+      <h2>${escapeHtml(message(locale, "areas.bestFor"))}</h2>${listItems(area.bestFor, escapeHtml)}
+      <h2>${escapeHtml(message(locale, "areas.hotelsHere"))}</h2><p>${links(site.filterHotels({ areaSlug: area.slug }), (hotel) => ({ href: appPath(locale, `/hotels/${hotel.slug}`), label: hotel.name }))}</p></main>`;
   }
 
   if (route.kind === "collection") {
-    const collection = getCollection(route.slug);
-    const matchingHotels = collectionHotels(collection);
-    return `
-      <main class="seo-static">
-        <h1>${escapeHtml(collection.h1)}</h1>
-        <p>${escapeHtml(collection.intro)}</p>
-        <h2>Matching stays</h2>
-        <p>${links(matchingHotels, (hotel) => ({ href: `/en/hotels/${hotel.slug}`, label: hotel.name }))}</p>
-      </main>`;
+    const collection = site.getCollection(route.slug);
+    return `<main class="seo-static"><h1>${heading}</h1><p>${escapeHtml(collection.intro)}</p>
+      <h2>${escapeHtml(message(locale, "collections.hotels"))}</h2><p>${links(site.collectionHotels(collection), (hotel) => ({ href: appPath(locale, `/hotels/${hotel.slug}`), label: hotel.name }))}</p></main>`;
   }
 
   if (route.kind === "guide-detail") {
-    const guide = getGuide(route.slug);
-    return `
-      <main class="seo-static">
-        <h1>${escapeHtml(guide.title)}</h1>
-        <p>${escapeHtml(guide.description)}</p>
-        ${guide.sections.map((section) => `<h2>${escapeHtml(section.heading)}</h2><p>${escapeHtml(section.body)}</p>`).join("")}
-      </main>`;
+    const guide = site.getGuide(route.slug);
+    return `<main class="seo-static"><h1>${heading}</h1><p>${description}</p>${guide.sections.map((section) => `<h2>${escapeHtml(section.heading)}</h2><p>${escapeHtml(section.body)}</p>`).join("")}</main>`;
   }
 
-  if (route.kind === "hotels") {
-    return `
-      <main class="seo-static">
-        <h1>${title}</h1>
-        <p>${description}</p>
-        <h2>Featured small hotels</h2>
-        ${listItems(hotels, (hotel) => `<a href="/en/hotels/${hotel.slug}">${escapeHtml(hotel.name)}</a> - ${escapeHtml(hotel.areaName)} - ${escapeHtml(hotel.shortDescription)}`)}
-      </main>`;
-  }
-
-  if (route.kind === "areas") {
-    return `
-      <main class="seo-static">
-        <h1>${title}</h1>
-        <p>${description}</p>
-        ${listItems(areas, (area) => `<a href="/en/areas/${area.slug}">${escapeHtml(area.name)}</a> - ${escapeHtml(area.description)}`)}
-      </main>`;
-  }
-
-  if (route.kind === "collections") {
-    return `
-      <main class="seo-static">
-        <h1>${title}</h1>
-        <p>${description}</p>
-        ${listItems(collections, (collection) => `<a href="/en/collections/${collection.slug}">${escapeHtml(collection.title)}</a> - ${escapeHtml(collection.description)}`)}
-      </main>`;
-  }
-
-  if (route.kind === "guide") {
-    return `
-      <main class="seo-static">
-        <h1>${title}</h1>
-        <p>${description}</p>
-        ${listItems(guides, (guide) => `<a href="/en/guide/${guide.slug}">${escapeHtml(guide.title)}</a> - ${escapeHtml(guide.description)}`)}
-      </main>`;
-  }
-
-  return `
-    <main class="seo-static">
-      <h1>${title}</h1>
-      <p>${description}</p>
-      <p>${links(hotels.slice(0, 6), (hotel) => ({ href: `/en/hotels/${hotel.slug}`, label: hotel.name }))}</p>
-      <p><a href="${escapeHtml(localeRoutePath)}">Open Small Hotels Batumi</a></p>
-    </main>`;
+  const lists = {
+    hotels: () => listItems(site.hotels, (hotel) => `<a href="${appPath(locale, `/hotels/${hotel.slug}`)}">${isolatedName(hotel.name)}</a> — ${escapeHtml(hotel.areaLabel)} — ${escapeHtml(hotel.shortDescription)}`),
+    areas: () => listItems(site.areas, (area) => `<a href="${appPath(locale, `/areas/${area.slug}`)}">${escapeHtml(area.name)}</a> — ${escapeHtml(area.description)}`),
+    collections: () => listItems(site.collections, (collection) => `<a href="${appPath(locale, `/collections/${collection.slug}`)}">${escapeHtml(collection.title)}</a> — ${escapeHtml(collection.description)}`),
+    guide: () => listItems(site.guides, (guide) => `<a href="${appPath(locale, `/guide/${guide.slug}`)}">${escapeHtml(guide.title)}</a> — ${escapeHtml(guide.description)}`)
+  };
+  const content = lists[route.kind]?.() ?? `<p>${links(site.hotels.slice(0, 6), (hotel) => ({ href: appPath(locale, `/hotels/${hotel.slug}`), label: hotel.name }))}</p>`;
+  return `<main class="seo-static"><h1>${heading}</h1><p>${description}</p>${content}</main>`;
 }
 
-function headTags({ locale, routePath, canonicalPath, route }) {
+function headTags({ locale, route, canonicalPath, site }) {
   const language = locales.find((item) => item.code === locale) ?? locales[0];
-  const meta = routeMeta(route);
+  const meta = routeMeta(route, site, locale);
   const canonical = absoluteUrl(canonicalPath);
-  const altPath = route.path;
-  const alternates = localeCodes.map((code) => {
-    const href = absoluteUrl(localePath(code, altPath));
-    return `<link rel="alternate" hreflang="${code}" href="${escapeHtml(href)}" />`;
-  });
-  alternates.push(`<link rel="alternate" hreflang="x-default" href="${escapeHtml(absoluteUrl(localePath(defaultLocale, altPath)))}" />`);
-
-  const schemas = [meta.schema, breadcrumbSchema(locale, routePath, route), faqSchema(routeFaqs(route))].filter(Boolean);
+  const alternates = localeCodes.map((code) =>
+    `<link rel="alternate" hreflang="${code}" href="${escapeHtml(absoluteUrl(localePath(code, route.path)))}" />`
+  );
+  alternates.push(`<link rel="alternate" hreflang="x-default" href="${escapeHtml(absoluteUrl(localePath(defaultLocale, route.path)))}" />`);
+  const schemas = [meta.schema, breadcrumbSchema(locale, route, site), faqSchema(routeFaqs(route, site), locale)].filter(Boolean);
 
   return {
     language,
-    tags: `
-    <title>${escapeHtml(meta.title)}</title>
+    tags: `<title>${escapeHtml(meta.title)}</title>
     <meta name="description" content="${escapeHtml(stripHtml(meta.description))}" />
     <link rel="canonical" href="${escapeHtml(canonical)}" />
     ${alternates.join("\n    ")}
@@ -424,13 +444,12 @@ function headTags({ locale, routePath, canonicalPath, route }) {
     <meta name="twitter:title" content="${escapeHtml(meta.title)}" />
     <meta name="twitter:description" content="${escapeHtml(stripHtml(meta.description))}" />
     <meta name="twitter:image" content="${escapeHtml(meta.image)}" />
-    ${schemas.map((schema) => `<script type="application/ld+json">${JSON.stringify(schema)}</script>`).join("\n    ")}
-    `
+    ${schemas.map((schema) => `<script type="application/ld+json" data-route-schema="true">${JSON.stringify(schema)}</script>`).join("\n    ")}`
   };
 }
 
-function renderHtml({ locale, route, routePath, canonicalPath = routePath }) {
-  const { language, tags } = headTags({ locale, routePath, canonicalPath, route });
+function renderHtml({ locale, route, canonicalPath, site }) {
+  const { language, tags } = headTags({ locale, route, canonicalPath, site });
   let html = template
     .replace(/<html[^>]*>/i, `<html lang="${language.htmlLang}" dir="${language.dir}">`)
     .replace(/\s*<title>[\s\S]*?<\/title>/i, "")
@@ -441,20 +460,61 @@ function renderHtml({ locale, route, routePath, canonicalPath = routePath }) {
     .replace(/\s*<link\s+rel="alternate"[^>]*>/gi, "");
 
   html = html.replace("</head>", `${tags}\n  </head>`);
-  html = html.replace('<div id="root"></div>', `<div id="root">${pageStaticMarkup(route, routePath)}</div>`);
+  html = html.replace('<div id="root"></div>', `<div id="root">${pageStaticMarkup(route, site, locale)}</div>`);
+  return html;
+}
+
+function renderNotFoundHtml() {
+  const language = locales.find((item) => item.code === defaultLocale) ?? locales[0];
+  const homePath = localePath(defaultLocale, "/");
+  const canonical = absoluteUrl(homePath);
+  const homeHref = appPath(defaultLocale, "/");
+  const title = "Page not found | Small Hotels Batumi";
+  const description = "The requested page does not exist. Continue to the Small Hotels Batumi homepage.";
+  const tags = `<title>${escapeHtml(title)}</title>
+    <meta name="description" content="${escapeHtml(description)}" />
+    <meta name="robots" content="noindex,follow" />
+    <link rel="canonical" href="${escapeHtml(canonical)}" />`;
+  const content = `<main class="seo-static"><h1>Page not found</h1><p>${escapeHtml(description)}</p><p><a href="${escapeHtml(homeHref)}">Go to the English homepage</a></p></main>`;
+
+  let html = template
+    .replace(/<html[^>]*>/i, `<html lang="${language.htmlLang}" dir="${language.dir}">`)
+    .replace(/\s*<title>[\s\S]*?<\/title>/i, "")
+    .replace(/\s*<meta\s+name="description"[^>]*>/i, "")
+    .replace(/\s*<meta\s+name="robots"[^>]*>/gi, "")
+    .replace(/\s*<meta\s+property="og:[^"]+"[^>]*>/gi, "")
+    .replace(/\s*<meta\s+name="twitter:[^"]+"[^>]*>/gi, "")
+    .replace(/\s*<link\s+rel="canonical"[^>]*>/gi, "")
+    .replace(/\s*<link\s+rel="alternate"[^>]*>/gi, "");
+
+  html = html.replace("</head>", `${tags}\n  </head>`);
+  html = html.replace('<div id="root"></div>', `<div id="root">${content}</div>`);
   return html;
 }
 
 const sitemapUrls = [];
 
 for (const locale of localeCodes) {
+  const site = createLocalizedSiteData(locale);
   for (const route of staticRoutes) {
     const routePath = localePath(locale, route.path);
     sitemapUrls.push(absoluteUrl(routePath));
     const outputFile = routeFilePath(routePath);
     await mkdir(path.dirname(outputFile), { recursive: true });
-    await writeFile(outputFile, renderHtml({ locale, route, routePath }), "utf8");
+    await writeFile(
+      outputFile,
+      renderHtml({ locale, route, canonicalPath: routePath, site }),
+      "utf8"
+    );
   }
+}
+
+for (const alias of legacyAliases) {
+  const targetPath = localePath(defaultLocale, alias.targetPath);
+  const html = await readFile(routeFilePath(targetPath), "utf8");
+  const outputFile = routeFilePath(alias.path);
+  await mkdir(path.dirname(outputFile), { recursive: true });
+  await writeFile(outputFile, html, "utf8");
 }
 
 const homeRoute = staticRoutes[0];
@@ -463,18 +523,18 @@ await writeFile(
   renderHtml({
     locale: defaultLocale,
     route: homeRoute,
-    routePath: "/",
-    canonicalPath: localePath(defaultLocale, "/")
+    canonicalPath: localePath(defaultLocale, "/"),
+    site: createLocalizedSiteData(defaultLocale)
   }),
   "utf8"
 );
+await writeFile(path.join(distDir, "404.html"), renderNotFoundHtml(), "utf8");
 
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${sitemapUrls.map((url) => `  <url><loc>${escapeHtml(url)}</loc></url>`).join("\n")}
 </urlset>
 `;
-
 await writeFile(path.join(distDir, "sitemap.xml"), sitemap, "utf8");
 await writeFile(
   path.join(distDir, "robots.txt"),
@@ -482,4 +542,6 @@ await writeFile(
   "utf8"
 );
 
-console.log(`Prerendered ${sitemapUrls.length} localized routes plus sitemap.xml and robots.txt.`);
+console.log(
+  `Prerendered ${sitemapUrls.length} localized routes, ${legacyAliases.length} legacy aliases and 404.html plus sitemap.xml and robots.txt.`
+);

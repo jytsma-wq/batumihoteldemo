@@ -2,9 +2,9 @@ import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { SlidersHorizontal, X } from "lucide-react";
 import HotelCard from "../components/HotelCard.jsx";
+import { selectHotelResults } from "../hotel-results.js";
 import { usePageMeta } from "../hooks/usePageMeta.js";
-import { areas, collections, filterHotels, filterOptions, hotelTypes, budgetRanges } from "../data/site.js";
-import { useI18n, useLocalePath } from "../i18n.jsx";
+import { useI18n, useLocalePath, useSiteData } from "../i18n.jsx";
 
 const defaultFilters = {
   areaSlug: "",
@@ -22,15 +22,25 @@ export default function HotelsPage() {
   }));
   const { dataLabel, t } = useI18n();
   const localePath = useLocalePath();
+  const site = useSiteData();
+  const {
+    areas,
+    budgetRangeOptions,
+    collections,
+    filterOptions,
+    hotelTypeOptions
+  } = site;
 
   usePageMeta(`${t("hotelsPage.title")} | Small Hotels Batumi`, t("hotelsPage.intro"));
 
   const activeFilters = useMemo(() => {
     const flagFilters = Object.fromEntries(filterOptions.map((option) => [option.key, Boolean(filters[option.key])]));
     return { ...filters, ...flagFilters };
-  }, [filters]);
+  }, [filterOptions, filters]);
 
-  const filteredHotels = useMemo(() => filterHotels(activeFilters), [activeFilters]);
+  // Localized hotel objects belong to the current site context. Recalculate the
+  // small result set on every render so a locale switch cannot reuse old objects.
+  const filteredHotels = selectHotelResults(site, activeFilters);
 
   function updateFilter(name, value) {
     setFilters((current) => ({ ...current, [name]: value }));
@@ -43,7 +53,7 @@ export default function HotelsPage() {
   return (
     <main>
       <section className="page-hero">
-        <p className="eyebrow">Batumi accommodation directory</p>
+        <p className="eyebrow">{t("hotelsPage.eyebrow")}</p>
         <h1>{t("hotelsPage.title")}</h1>
         <p>{t("hotelsPage.intro")}</p>
       </section>
@@ -77,9 +87,9 @@ export default function HotelsPage() {
             {t("hotelsPage.type")}
             <select value={filters.type} onChange={(event) => updateFilter("type", event.target.value)}>
               <option value="">{t("common.all")}</option>
-              {hotelTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
+              {hotelTypeOptions.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
                 </option>
               ))}
             </select>
@@ -89,9 +99,9 @@ export default function HotelsPage() {
             {t("hotelsPage.budget")}
             <select value={filters.budget} onChange={(event) => updateFilter("budget", event.target.value)}>
               <option value="">{t("common.all")}</option>
-              {budgetRanges.map((range) => (
-                <option key={range} value={range}>
-                  {range}
+              {budgetRangeOptions.map((range) => (
+                <option key={range.value} value={range.value}>
+                  {range.label}
                 </option>
               ))}
             </select>

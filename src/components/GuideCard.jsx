@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { useLocalePath } from "../i18n.jsx";
+import { useI18n, useLocalePath } from "../i18n.jsx";
 
 export default function GuideCard({ guide }) {
   const localePath = useLocalePath();
+  const { t } = useI18n();
 
   return (
     <article className="guide-card">
@@ -11,7 +12,7 @@ export default function GuideCard({ guide }) {
       <h3>{guide.title}</h3>
       <p>{guide.description}</p>
       <Link className="text-link" to={localePath(`/guide/${guide.slug}`)}>
-        Read guide
+        {t("common.readGuide")}
         <ArrowRight size={16} />
       </Link>
     </article>

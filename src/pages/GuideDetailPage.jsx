@@ -3,14 +3,14 @@ import Breadcrumbs from "../components/Breadcrumbs.jsx";
 import CollectionCard from "../components/CollectionCard.jsx";
 import HotelCard from "../components/HotelCard.jsx";
 import { usePageMeta } from "../hooks/usePageMeta.js";
-import { collections, filterHotels, getArea, getGuide } from "../data/site.js";
-import { useI18n, useLocalePath } from "../i18n.jsx";
+import { useI18n, useLocalePath, useSiteData } from "../i18n.jsx";
 
 export default function GuideDetailPage() {
   const { slug } = useParams();
-  const guide = getGuide(slug);
   const { t } = useI18n();
   const localePath = useLocalePath();
+  const { collections, filterHotels, getArea, getGuide } = useSiteData();
+  const guide = getGuide(slug);
 
   const guideCollections = guide
     ? collections.filter((collection) => guide.relatedCollections.includes(collection.slug))
@@ -33,16 +33,16 @@ export default function GuideDetailPage() {
         <div className="toc-panel">
           <h2>{t("guide.tableOfContents")}</h2>
           <ol>
-            {guide.sections.map((section) => (
-              <li key={section.heading}>
-                <a href={`#${section.heading.toLowerCase().replaceAll(" ", "-")}`}>{section.heading}</a>
+            {guide.sections.map((section, index) => (
+              <li key={`guide-section-${index + 1}`}>
+                <a href={`#guide-section-${index + 1}`}>{section.heading}</a>
               </li>
             ))}
           </ol>
         </div>
 
-        {guide.sections.map((section) => (
-          <section key={section.heading} id={section.heading.toLowerCase().replaceAll(" ", "-")}>
+        {guide.sections.map((section, index) => (
+          <section key={`guide-section-${index + 1}`} id={`guide-section-${index + 1}`}>
             <h2>{section.heading}</h2>
             <p>{section.body}</p>
           </section>

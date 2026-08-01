@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, NavLink, Outlet, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import HomePage from "./pages/HomePage.jsx";
 import HotelsPage from "./pages/HotelsPage.jsx";
@@ -15,7 +15,12 @@ import GuidePage from "./pages/GuidePage.jsx";
 import GuideDetailPage from "./pages/GuideDetailPage.jsx";
 import AboutPage from "./pages/AboutPage.jsx";
 import LegalPage from "./pages/LegalPage.jsx";
-import { switchLocalePath, useI18n, useLocalePath, useLocaleSync } from "./i18n.jsx";
+import { isLocale, switchLocalePath, useI18n, useLocalePath, useLocaleSync } from "./i18n.jsx";
+
+function LocaleGuard() {
+  const { locale } = useParams();
+  return isLocale(locale) ? <Outlet /> : <Navigate to="/en/" replace />;
+}
 
 function LanguageSwitcher() {
   const { language, languages, setLanguage, t } = useI18n();
@@ -27,7 +32,11 @@ function LanguageSwitcher() {
   function handleChange(event) {
     const nextLanguage = event.target.value;
     setLanguage(nextLanguage);
-    navigate(switchLocalePath(location.pathname, nextLanguage));
+    navigate({
+      pathname: switchLocalePath(location.pathname, nextLanguage),
+      search: location.search,
+      hash: location.hash
+    });
   }
 
   return (
@@ -72,14 +81,14 @@ function Header() {
 
   return (
     <header className="site-header">
-      <Link className="brand" to={localePath("/")} aria-label="Small Hotels Batumi home">
+      <Link className="brand" to={localePath("/")} aria-label={t("common.brandHome")}>
         <span className="brand-mark">SH</span>
         <span>
           <strong>Small Hotels</strong>
           <em>Batumi</em>
         </span>
       </Link>
-      <nav className="desktop-nav" aria-label="Primary navigation">
+      <nav className="desktop-nav" aria-label={t("common.primaryNavigation")}>
         {nav}
       </nav>
       <div className="header-actions">
@@ -97,7 +106,7 @@ function Header() {
         </button>
       </div>
       {open && (
-        <div className="mobile-nav" aria-label="Mobile navigation">
+        <div className="mobile-nav" aria-label={t("common.mobileNavigation")}>
           {nav}
           <Link className="button primary" to={localePath("/hotels")}>
             {t("common.findRoom")}
@@ -153,22 +162,23 @@ export default function App() {
         <Route path="/for-hotel-owners" element={<Navigate to={`/${language}/for-property-owners`} replace />} />
         <Route path="/contact" element={<Navigate to={`/${language}/contact`} replace />} />
 
-        <Route path="/:locale" element={<HomePage />} />
-        <Route path="/:locale/" element={<HomePage />} />
-        <Route path="/:locale/hotels" element={<HotelsPage />} />
-        <Route path="/:locale/hotels/:slug" element={<HotelDetailPage />} />
-        <Route path="/:locale/areas" element={<AreasPage />} />
-        <Route path="/:locale/areas/:slug" element={<AreaDetailPage />} />
-        <Route path="/:locale/collections" element={<CollectionsPage />} />
-        <Route path="/:locale/collections/:slug" element={<CollectionDetailPage />} />
-        <Route path="/:locale/map" element={<MapPage />} />
-        <Route path="/:locale/guide" element={<GuidePage />} />
-        <Route path="/:locale/guide/:slug" element={<GuideDetailPage />} />
-        <Route path="/:locale/about" element={<AboutPage />} />
-        <Route path="/:locale/contact" element={<ContactPage />} />
-        <Route path="/:locale/for-property-owners" element={<OwnersPage />} />
-        <Route path="/:locale/privacy" element={<LegalPage type="privacy" />} />
-        <Route path="/:locale/terms" element={<LegalPage type="terms" />} />
+        <Route path="/:locale" element={<LocaleGuard />}>
+          <Route index element={<HomePage />} />
+          <Route path="hotels" element={<HotelsPage />} />
+          <Route path="hotels/:slug" element={<HotelDetailPage />} />
+          <Route path="areas" element={<AreasPage />} />
+          <Route path="areas/:slug" element={<AreaDetailPage />} />
+          <Route path="collections" element={<CollectionsPage />} />
+          <Route path="collections/:slug" element={<CollectionDetailPage />} />
+          <Route path="map" element={<MapPage />} />
+          <Route path="guide" element={<GuidePage />} />
+          <Route path="guide/:slug" element={<GuideDetailPage />} />
+          <Route path="about" element={<AboutPage />} />
+          <Route path="contact" element={<ContactPage />} />
+          <Route path="for-property-owners" element={<OwnersPage />} />
+          <Route path="privacy" element={<LegalPage type="privacy" />} />
+          <Route path="terms" element={<LegalPage type="terms" />} />
+        </Route>
         <Route path="*" element={<Navigate to={`/${language}/`} replace />} />
       </Routes>
       <Footer />

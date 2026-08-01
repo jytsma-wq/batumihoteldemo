@@ -14,20 +14,20 @@ export default function HotelCard({ hotel, priority = false }) {
       <Link className="hotel-image-link" to={localePath(`/hotels/${hotel.slug}`)}>
         <img
           src={hotel.image}
-          alt={`${hotel.name} in ${areaLabel}, Batumi`}
+          alt={t("common.hotelImageAlt", { hotelName: hotel.name, areaName: areaLabel })}
           loading={priority ? "eager" : "lazy"}
         />
       </Link>
       <div className="hotel-card-body">
         <div className="hotel-card-heading">
-          <h3>{hotel.name}</h3>
+          <h3><bdi>{hotel.name}</bdi></h3>
           <span>
             <MapPin size={15} />
             {areaLabel}
           </span>
         </div>
         <p>{hotel.shortDescription}</p>
-        <div className="tag-row" aria-label={`${hotel.name} highlights`}>
+        <div className="tag-row" aria-label={t("common.hotelHighlights", { hotelName: hotel.name })}>
           {badges.slice(0, 4).map((tag) => (
             <span key={tag}>{tag}</span>
           ))}
@@ -38,7 +38,7 @@ export default function HotelCard({ hotel, priority = false }) {
             {hotel.distanceToBeach}
           </span>
           <strong>
-            {t("common.from")} {hotel.priceFromGel} {t("common.gel")}
+            {t("common.from")} <bdi dir="ltr">{hotel.priceFromGel} {t("common.gel")}</bdi>
           </strong>
         </div>
         <div className="hotel-actions">
