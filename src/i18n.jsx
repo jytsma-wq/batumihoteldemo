@@ -1,7 +1,15 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
 import { defaultLocale as configuredDefaultLocale, locales } from "./data/site.js";
-import { createLocalizedSiteData } from "./data/localized-site.js";
-import { ui } from "./messages.js";
+import { createLocalizedSiteDataFromMessages } from "./data/localized-site-core.js";
+import { createLatestLocaleRequest } from "./locale-resources.js";
 import {
   isLocale,
   localeCodes,
@@ -38,14 +46,56 @@ function languageConfig(code) {
   return languages.find((language) => language.code === code) || languages[0];
 }
 
-export function I18nProvider({ children, initialLanguage }) {
-  const [language, setLanguage] = useState(() => {
+export function I18nProvider({ children, initialLanguage, initialResources }) {
+  const startingLanguage = (() => {
     if (initialLanguage && isLocale(initialLanguage)) return initialLanguage;
     if (typeof window !== "undefined") return localeFromPathname(window.location.pathname);
     return defaultLocale;
+  })();
+  const [localeState, setLocaleState] = useState(() => {
+    if (!initialResources?.ui) {
+      throw new Error(`Missing initial locale resources: ${startingLanguage}`);
+    }
+    return { language: startingLanguage, resources: initialResources };
   });
+  const requestLocale = useRef(createLatestLocaleRequest()).current;
+  const { language, resources } = localeState;
   const config = languageConfig(language);
-  const site = useMemo(() => createLocalizedSiteData(language), [language]);
+  const site = useMemo(
+    () => createLocalizedSiteDataFromMessages(language, resources.content),
+    [language, resources.content]
+  );
+
+  const setLanguage = useCallback(async (nextLanguage) => {
+    if (!isLocale(nextLanguage)) {
+      throw new Error(`Unsupported locale: ${nextLanguage}`);
+    }
+
+    const nextResources = await requestLocale(nextLanguage);
+    if (!nextResources) return false;
+
+    setLocaleState((current) =>
+      current.language === nextLanguage
+        ? current
+        : { language: nextLanguage, resources: nextResources }
+    );
+    return true;
+  }, [requestLocale]);
+
+  const activateLanguage = useCallback(
+    (nextLanguage, nextResources) => {
+      if (!isLocale(nextLanguage) || !nextResources?.ui) {
+        throw new Error(`Invalid locale activation: ${nextLanguage}`);
+      }
+      requestLocale.invalidate();
+      setLocaleState((current) =>
+        current.language === nextLanguage
+          ? current
+          : { language: nextLanguage, resources: nextResources }
+      );
+    },
+    [requestLocale]
+  );
 
   useEffect(() => {
     document.documentElement.lang = config.htmlLang;
@@ -54,24 +104,24 @@ export function I18nProvider({ children, initialLanguage }) {
 
   const t = useCallback(
     (path, params) => {
-      const value = getNestedValue(ui[language], path);
+      const value = getNestedValue(resources.ui, path);
       if (typeof value !== "string") {
         throw new Error(`Missing UI translation: ${language}.${path}`);
       }
       return interpolate(value, params);
     },
-    [language]
+    [language, resources.ui]
   );
 
   const list = useCallback(
     (path) => {
-      const value = getNestedValue(ui[language], path);
+      const value = getNestedValue(resources.ui, path);
       if (!Array.isArray(value)) {
         throw new Error(`Missing UI list translation: ${language}.${path}`);
       }
       return value;
     },
-    [language]
+    [language, resources.ui]
   );
 
   const dataLabel = useCallback(
@@ -80,8 +130,18 @@ export function I18nProvider({ children, initialLanguage }) {
   );
 
   const value = useMemo(
-    () => ({ language, languageConfig: config, languages, setLanguage, t, list, dataLabel, site }),
-    [config, dataLabel, language, list, site, t]
+    () => ({
+      activateLanguage,
+      language,
+      languageConfig: config,
+      languages,
+      setLanguage,
+      t,
+      list,
+      dataLabel,
+      site
+    }),
+    [activateLanguage, config, dataLabel, language, list, setLanguage, site, t]
   );
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
@@ -102,10 +162,19 @@ export function useSiteData() {
   return useI18n().site;
 }
 
-export function useLocaleSync(pathname) {
-  const { setLanguage } = useI18n();
+export function useLocaleSync(pathname, onError) {
+  const { language, setLanguage } = useI18n();
+  const targetLanguage = localeFromPathname(pathname);
 
   useEffect(() => {
-    setLanguage(localeFromPathname(pathname));
-  }, [pathname, setLanguage]);
+    let active = true;
+    void setLanguage(targetLanguage).catch((error) => {
+      if (active) onError?.(error, targetLanguage);
+    });
+    return () => {
+      active = false;
+    };
+  }, [onError, pathname, setLanguage, targetLanguage]);
+
+  return targetLanguage === language;
 }

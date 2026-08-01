@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 
-import { createLocalizedSiteData } from "../src/data/localized-site.js";
+import {
+  contentTranslations,
+  createLocalizedSiteData
+} from "../src/data/localized-site.js";
 import { selectHotelResults } from "../src/hotel-results.js";
+import {
+  createLatestLocaleRequest,
+  loadLocaleResources
+} from "../src/locale-resources.js";
 import {
   localeFromPathname,
   stripLocale,
@@ -15,6 +22,50 @@ import {
   shouldReplaceRouteSchemas
 } from "../src/route-meta.js";
 import { resolveLocalizedTemplate } from "../src/hooks/useLocalizedTemplate.js";
+import { ui } from "../src/messages.js";
+
+for (const locale of ["en", "ru", "ka", "tr", "he", "ar"]) {
+  const resources = await loadLocaleResources(locale);
+  assert.strictEqual(resources.ui, ui[locale]);
+  assert.strictEqual(resources.content, contentTranslations[locale]);
+  assert.strictEqual(await loadLocaleResources(locale), resources);
+}
+await assert.rejects(loadLocaleResources("fr"), /Unsupported locale/);
+
+const pendingLocaleLoads = new Map();
+const requestLocale = createLatestLocaleRequest(
+  (locale) =>
+    new Promise((resolve, reject) => {
+      pendingLocaleLoads.set(locale, { reject, resolve });
+    })
+);
+const staleRussianRequest = requestLocale("ru");
+const currentGeorgianRequest = requestLocale("ka");
+pendingLocaleLoads.get("ru").reject(new Error("stale Russian chunk failure"));
+pendingLocaleLoads.get("ka").resolve({ ui: ui.ka, content: contentTranslations.ka });
+assert.equal(await staleRussianRequest, undefined);
+assert.deepEqual(await currentGeorgianRequest, {
+  ui: ui.ka,
+  content: contentTranslations.ka
+});
+
+const failedCurrentRequest = requestLocale("tr");
+pendingLocaleLoads.get("tr").reject(new Error("current Turkish chunk failure"));
+await assert.rejects(failedCurrentRequest, /current Turkish chunk failure/);
+
+const historyLocaleLoads = new Map();
+const requestHistoryLocale = createLatestLocaleRequest(
+  (locale) =>
+    new Promise((resolve) => {
+      historyLocaleLoads.set(locale, resolve);
+    })
+);
+const pendingRussianHistory = requestHistoryLocale("ru");
+const restoredEnglishHistory = requestHistoryLocale("en");
+historyLocaleLoads.get("en")({ ui: ui.en, content: undefined });
+historyLocaleLoads.get("ru")({ ui: ui.ru, content: contentTranslations.ru });
+assert.equal(await pendingRussianHistory, undefined);
+assert.deepEqual(await restoredEnglishHistory, { ui: ui.en, content: undefined });
 
 const productionBase = "/batumihoteldemo/";
 
