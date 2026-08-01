@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { collectionHotels } from "../data/site.js";
-import { useLocalePath } from "../i18n.jsx";
+import { useI18n, useLocalePath, useSiteData } from "../i18n.jsx";
 
 export default function CollectionCard({ collection }) {
   const localePath = useLocalePath();
+  const { collectionHotels } = useSiteData();
+  const { t } = useI18n();
   const count = collectionHotels(collection).length;
 
   return (
@@ -13,7 +14,7 @@ export default function CollectionCard({ collection }) {
       <h3>{collection.title}</h3>
       <p>{collection.description}</p>
       <Link className="text-link" to={localePath(`/collections/${collection.slug}`)}>
-        {count} stays
+        {t("common.stays", { count })}
         <ArrowRight size={16} />
       </Link>
     </article>

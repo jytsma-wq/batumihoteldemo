@@ -5,7 +5,7 @@ export default function WhatsAppButton({ phone, text, hotelName, className = "" 
   const { t } = useI18n();
   const message = hotelName
     ? t("forms.bookingMessage", { hotelName })
-    : "Hello, I found Small Hotels Batumi and would like accommodation advice.";
+    : t("forms.accommodationAdviceMessage");
   const href = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
   const label = text ?? t("common.whatsapp");
 

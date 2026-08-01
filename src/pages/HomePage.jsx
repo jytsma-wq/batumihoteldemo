@@ -6,8 +6,7 @@ import CollectionCard from "../components/CollectionCard.jsx";
 import GuideCard from "../components/GuideCard.jsx";
 import HotelCard from "../components/HotelCard.jsx";
 import { usePageMeta } from "../hooks/usePageMeta.js";
-import { areas, collections, guides, hotels } from "../data/site.js";
-import { useI18n, useLocalePath } from "../i18n.jsx";
+import { useI18n, useLocalePath, useSiteData } from "../i18n.jsx";
 
 const intentIcons = [Waves, ShieldCheck, BedDouble, Car];
 const intentCollections = [
@@ -20,6 +19,7 @@ const intentCollections = [
 export default function HomePage() {
   const { list, t } = useI18n();
   const localePath = useLocalePath();
+  const { areas, collections, guides, hotels } = useSiteData();
   const featuredCollections = collections.filter((collection) => intentCollections.includes(collection.slug));
 
   usePageMeta(
@@ -55,7 +55,7 @@ export default function HomePage() {
       <section className="section intent-section">
         <div className="section-heading split">
           <div>
-            <p className="eyebrow">Traveller intent</p>
+            <p className="eyebrow">{t("home.intentEyebrow")}</p>
             <h2>{t("home.intentTitle")}</h2>
           </div>
           <Link className="text-link" to={localePath("/collections")}>
@@ -80,7 +80,7 @@ export default function HomePage() {
       <section className="section">
         <div className="section-heading split">
           <div>
-            <p className="eyebrow">Direct local requests</p>
+            <p className="eyebrow">{t("home.featuredEyebrow")}</p>
             <h2>{t("home.featuredTitle")}</h2>
             <p>{t("home.featuredBody")}</p>
           </div>
@@ -98,12 +98,9 @@ export default function HomePage() {
       <section className="section area-band">
         <div className="section-heading split">
           <div>
-            <p className="eyebrow">Neighbourhood guide</p>
+            <p className="eyebrow">{t("home.areasEyebrow")}</p>
             <h2>{t("home.areasTitle")}</h2>
-            <p>
-              Old Batumi, Boulevard, New Boulevard, Gonio and Kvariati can feel like different trips.
-              Start with the area, then choose the room.
-            </p>
+            <p>{t("home.areasBody")}</p>
           </div>
           <Link className="text-link" to={localePath("/areas")}>
             {t("common.exploreAreas")}
@@ -118,7 +115,7 @@ export default function HomePage() {
 
       <section className="section trust-section">
         <div>
-          <p className="eyebrow">Before you ask for dates</p>
+          <p className="eyebrow">{t("home.trustEyebrow")}</p>
           <h2>{t("home.trustTitle")}</h2>
           <p>{t("home.trustBody")}</p>
         </div>
@@ -135,7 +132,7 @@ export default function HomePage() {
       <section className="section">
         <div className="section-heading split">
           <div>
-            <p className="eyebrow">Planning help</p>
+            <p className="eyebrow">{t("home.collectionsEyebrow")}</p>
             <h2>{t("home.collectionsTitle")}</h2>
           </div>
           <Link className="text-link" to={localePath("/guide")}>
@@ -151,7 +148,7 @@ export default function HomePage() {
 
       <section className="section guide-band">
         <div className="section-heading">
-          <p className="eyebrow">Local advice</p>
+          <p className="eyebrow">{t("home.guideEyebrow")}</p>
           <h2>{t("home.guideTitle")}</h2>
         </div>
         <div className="guide-grid">

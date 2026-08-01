@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useI18n } from "../i18n.jsx";
+import { useI18n, useLocalePath } from "../i18n.jsx";
 
 export default function CTASection({
   title,
@@ -8,6 +8,7 @@ export default function CTASection({
   to = "/contact"
 }) {
   const { t } = useI18n();
+  const localePath = useLocalePath();
   const resolvedTitle = title ?? t("cta.title");
   const resolvedBody = body ?? t("cta.body");
   const resolvedButton = button ?? t("cta.button");
@@ -18,7 +19,7 @@ export default function CTASection({
         <h2>{resolvedTitle}</h2>
         <p>{resolvedBody}</p>
       </div>
-      <Link className="button primary large" to={to}>
+      <Link className="button primary large" to={localePath(to)}>
         {resolvedButton}
       </Link>
     </section>

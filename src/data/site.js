@@ -2,7 +2,12 @@ export const SITE_URL = "https://jytsma-wq.github.io/batumihoteldemo";
 
 // Publish a locale only after both its UI dictionary and its hotel content are complete.
 export const locales = [
-  { code: "en", label: "English", nativeName: "English", htmlLang: "en", dir: "ltr" }
+  { code: "en", label: "English", nativeName: "English", htmlLang: "en", dir: "ltr" },
+  { code: "ru", label: "Russian", nativeName: "Русский", htmlLang: "ru", dir: "ltr" },
+  { code: "ka", label: "Georgian", nativeName: "ქართული", htmlLang: "ka", dir: "ltr" },
+  { code: "tr", label: "Turkish", nativeName: "Türkçe", htmlLang: "tr", dir: "ltr" },
+  { code: "he", label: "Hebrew", nativeName: "עברית", htmlLang: "he", dir: "rtl" },
+  { code: "ar", label: "Arabic", nativeName: "العربية", htmlLang: "ar", dir: "rtl" }
 ];
 
 export const defaultLocale = "en";
@@ -154,7 +159,7 @@ export const areas = [
       "A greener, quieter edge of Batumi with practical guesthouses and access toward the botanical garden and northern beaches.",
     bestFor: ["Green surroundings", "Simple guesthouses", "Botanical garden visits", "Car trips"],
     goodToKnow: [
-      "Central Batumi needs a taxi, bus or train connection.",
+      "Reaching central Batumi requires a taxi, bus or train.",
       "Some houses sit on slopes.",
       "Ask about exact access if travelling with heavy bags."
     ],
@@ -214,7 +219,7 @@ export const areas = [
       "A quieter beach area south of Batumi, practical for families, car trips and guests who want less city noise.",
     bestFor: ["Quiet beach stays", "Families", "Parking", "Summer trips"],
     goodToKnow: [
-      "Central Batumi requires a taxi or bus.",
+      "Reaching central Batumi requires a taxi or bus.",
       "Nightlife is limited compared with the city.",
       "Check the walking route to the beach, not only the distance."
     ],
@@ -706,7 +711,7 @@ export const hotels = [
       },
       {
         question: "Is it near the beach?",
-        answer: "The beach can be reachable, but routes may involve slopes. Ask about the exact walking path."
+        answer: "The beach may be reachable on foot, but routes can involve slopes. Ask about the exact walking path."
       },
       {
         question: "Do I need a car?",
@@ -823,7 +828,7 @@ export const hotels = [
         answer: "Central Batumi usually requires a taxi, bus or car."
       },
       {
-        question: "Can I ask availability on WhatsApp?",
+        question: "Can I ask about availability on WhatsApp?",
         answer: "Yes. WhatsApp is the simplest way to ask about dates and room fit."
       }
     ]
@@ -878,7 +883,7 @@ export const hotels = [
     checkInNote: "Arrive in daylight if hillside access concerns you.",
     languagesSpoken: ["Georgian", "Russian", "English basics"],
     breakfast: "Breakfast terrace may be available",
-    paymentNote: "Confirm cash/card before arrival.",
+    paymentNote: "Confirm whether cash and card payments are accepted before arrival.",
     whyStay: [
       "Sea-view rooms create a stronger sense of place than many city rooms.",
       "The area suits couples and guests who prefer quiet evenings.",
@@ -985,7 +990,7 @@ export const collections = [
     slug: "family-hotels-batumi",
     title: "Family hotels in Batumi",
     h1: "Family hotels in Batumi",
-    description: "Small hotels and guesthouses that work for families, walkable areas and beach days.",
+    description: "Small hotels and guesthouses for families who want walkable surroundings and easy beach days.",
     searchIntent: "family hotels Batumi",
     intro:
       "For families, the right area matters as much as the room. Look for parking, beach access and simple communication before arrival.",

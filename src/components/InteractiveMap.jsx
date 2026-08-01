@@ -2,13 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { MapPin } from "lucide-react";
 import "leaflet/dist/leaflet.css";
-import { areas, hotels } from "../data/site.js";
-import { useI18n, useLocalePath } from "../i18n.jsx";
+import { useI18n, useLocalePath, useSiteData } from "../i18n.jsx";
 
 const BATUMI_CENTER = [41.621, 41.635];
 const APP_BASE = import.meta.env.BASE_URL === "/" ? "" : import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export default function InteractiveMap() {
+  const { areas, hotels } = useSiteData();
   const [activeArea, setActiveArea] = useState("");
   const [selectedSlug, setSelectedSlug] = useState(hotels[0].slug);
   const [isReady, setIsReady] = useState(false);
@@ -22,7 +22,7 @@ export default function InteractiveMap() {
 
   const visibleHotels = useMemo(
     () => hotels.filter((hotel) => !activeArea || hotel.areaSlug === activeArea),
-    [activeArea]
+    [activeArea, hotels]
   );
 
   const selectedHotel = hotels.find((hotel) => hotel.slug === selectedSlug) ?? visibleHotels[0] ?? hotels[0];
@@ -94,7 +94,7 @@ export default function InteractiveMap() {
       const areaLabel = dataLabel("areas", hotel.areaName);
       const href = `${APP_BASE}${localePath(`/hotels/${hotel.slug}`)}`;
       marker.bindPopup(`
-        <strong>${hotel.name}</strong>
+        <strong><bdi>${hotel.name}</bdi></strong>
         <span>${areaLabel} / ${hotel.distanceToBeach}</span>
         <a href="${href}">${t("common.viewHotel")}</a>
       `);
@@ -140,7 +140,7 @@ export default function InteractiveMap() {
 
   return (
     <div className="interactive-map-shell">
-      <div className="map-toolbar" aria-label="Filter map by area">
+      <div className="map-toolbar" aria-label={t("map.filterAria")}>
         <button className={!activeArea ? "active" : ""} type="button" onClick={() => chooseArea("")}>
           {t("map.allStays")}
         </button>
@@ -178,7 +178,7 @@ export default function InteractiveMap() {
             />
             <div>
               <p className="eyebrow">{dataLabel("areas", selectedHotel.areaName)}</p>
-              <h2>{selectedHotel.name}</h2>
+              <h2><bdi>{selectedHotel.name}</bdi></h2>
               <p>{selectedHotel.shortDescription}</p>
               <Link className="button primary" to={localePath(`/hotels/${selectedHotel.slug}`)}>
                 {t("common.viewHotel")}
@@ -186,7 +186,7 @@ export default function InteractiveMap() {
             </div>
           </article>
 
-          <div className="map-hotel-list" aria-label="Hotels on the map">
+          <div className="map-hotel-list" aria-label={t("map.hotelsAria")}>
             {visibleHotels.map((hotel, index) => (
               <button
                 key={hotel.slug}
@@ -195,7 +195,7 @@ export default function InteractiveMap() {
                 onClick={() => chooseHotel(hotel)}
               >
                 <span>{index + 1}</span>
-                <strong>{hotel.name}</strong>
+                <strong><bdi>{hotel.name}</bdi></strong>
                 <em>{dataLabel("areas", hotel.areaName)} / {hotel.distanceToBeach}</em>
               </button>
             ))}

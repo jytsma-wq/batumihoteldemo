@@ -9,14 +9,14 @@ export default function AreaCard({ area }) {
 
   return (
     <article className="area-card">
-      <img src={area.image} alt={`${label}, Batumi accommodation area`} loading="lazy" />
+      <img src={area.image} alt={t("common.areaImageAlt", { areaName: label })} loading="lazy" />
       <div className="area-card-body">
         <div>
           <h3>{label}</h3>
           <p>{area.description}</p>
         </div>
         <Link to={localePath(`/areas/${area.slug}`)}>
-          <span>{area.hotelCount} small stays</span>
+          <span>{t("common.smallStays", { count: area.hotelCount })}</span>
           <ArrowRight size={16} />
         </Link>
       </div>

@@ -4,14 +4,14 @@ import CollectionCard from "../components/CollectionCard.jsx";
 import FAQSection from "../components/FAQSection.jsx";
 import HotelCard from "../components/HotelCard.jsx";
 import { usePageMeta } from "../hooks/usePageMeta.js";
-import { collections, filterHotels, getArea } from "../data/site.js";
-import { useI18n, useLocalePath } from "../i18n.jsx";
+import { useI18n, useLocalePath, useSiteData } from "../i18n.jsx";
 
 export default function AreaDetailPage() {
   const { slug } = useParams();
-  const area = getArea(slug);
   const { dataLabel, t } = useI18n();
   const localePath = useLocalePath();
+  const { collections, filterHotels, getArea } = useSiteData();
+  const area = getArea(slug);
 
   const hotelsHere = area ? filterHotels({ areaSlug: area.slug }) : [];
   const relatedCollections = area
@@ -28,14 +28,14 @@ export default function AreaDetailPage() {
       <section className="split-hero">
         <div>
           <Breadcrumbs items={[{ label: t("nav.areas"), to: "/areas" }, { label }]} />
-          <p className="eyebrow">Batumi neighbourhood</p>
+          <p className="eyebrow">{t("areas.detailEyebrow")}</p>
           <h1>{area.title}</h1>
           <p>{area.description}</p>
           <Link className="button primary" to={localePath(`/hotels?area=${area.slug}`)}>
             {t("common.exploreHotels")}
           </Link>
         </div>
-        <img src={area.image} alt={`${label}, Batumi`} />
+        <img src={area.image} alt={t("common.areaImageAlt", { areaName: label })} />
       </section>
 
       <section className="section area-detail-grid">

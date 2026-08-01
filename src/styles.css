@@ -913,8 +913,9 @@ p {
 .detail-list p {
   margin: 0;
   padding: 1rem;
-  border-left: 4px solid var(--sea);
-  border-radius: 0 8px 8px 0;
+  border-inline-start: 4px solid var(--sea);
+  border-start-end-radius: 8px;
+  border-end-end-radius: 8px;
   background: rgba(217, 238, 240, 0.46);
 }
 
@@ -1203,7 +1204,7 @@ p {
   display: grid;
   gap: 0.55rem;
   margin: 0;
-  padding-left: 1.25rem;
+  padding-inline-start: 1.25rem;
   color: var(--sea-dark);
   font-weight: 850;
 }
@@ -1361,13 +1362,14 @@ p {
 }
 
 .map-loading {
-  inset: 1rem auto auto 1rem;
+  inset-block-start: 1rem;
+  inset-inline-start: 1rem;
   padding: 0.65rem 0.8rem;
 }
 
 .map-help {
-  right: 1rem;
   bottom: 1rem;
+  inset-inline-end: 1rem;
   display: inline-flex;
   align-items: center;
   gap: 0.42rem;
@@ -1423,7 +1425,7 @@ p {
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--surface-strong);
-  text-align: left;
+  text-align: start;
 }
 
 .map-hotel-list button.active {
@@ -1535,7 +1537,7 @@ p {
 
 .contact-copy dl div {
   padding: 1rem;
-  border-left: 4px solid var(--coral);
+  border-inline-start: 4px solid var(--coral);
   background: rgba(255, 253, 248, 0.74);
 }
 
@@ -1742,7 +1744,7 @@ p {
 }
 
 html[dir="rtl"] body {
-  text-align: right;
+  text-align: start;
 }
 
 html[dir="rtl"] .breadcrumbs svg,
@@ -1752,25 +1754,11 @@ html[dir="rtl"] .text-link svg {
   transform: scaleX(-1);
 }
 
-html[dir="rtl"] .detail-list p,
-html[dir="rtl"] .contact-copy dl div {
-  border-left: 0;
-  border-right: 4px solid var(--sea);
-  border-radius: 8px 0 0 8px;
-}
-
-html[dir="rtl"] .toc-panel ol {
-  padding-right: 1.25rem;
-  padding-left: 0;
-}
-
-html[dir="rtl"] .map-hotel-list button {
-  text-align: right;
-}
-
-html[dir="rtl"] .map-help {
-  right: auto;
-  left: 1rem;
+.bidi-ltr,
+input[type="tel"],
+input[type="email"] {
+  direction: ltr;
+  unicode-bidi: isolate;
 }
 
 @media (max-width: 899px) {

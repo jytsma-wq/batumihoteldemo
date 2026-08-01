@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { Send } from "lucide-react";
 import { useI18n } from "../i18n.jsx";
+import { useLocalizedTemplate } from "../hooks/useLocalizedTemplate.js";
 
-export default function BookingRequestForm({ hotelName = "this hotel" }) {
+export default function BookingRequestForm({ hotelName }) {
   const [sent, setSent] = useState(false);
   const { t } = useI18n();
-  const defaultMessage = t("forms.bookingMessage", { hotelName });
+  const resolvedHotelName = hotelName ?? t("forms.defaultHotel");
+  const defaultMessage = t("forms.bookingMessage", { hotelName: resolvedHotelName });
+  const [message, setMessage] = useLocalizedTemplate(defaultMessage);
 
   function handleSubmit(event) {
     event.preventDefault();
@@ -24,7 +27,7 @@ export default function BookingRequestForm({ hotelName = "this hotel" }) {
         {t("forms.phone")}
         <input name="phone" type="tel" autoComplete="tel" required />
       </label>
-      <input name="hotel" type="hidden" value={hotelName} />
+      <input name="hotel" type="hidden" value={resolvedHotelName} />
       <div className="form-row">
         <label>
           {t("forms.checkIn")}
@@ -42,10 +45,10 @@ export default function BookingRequestForm({ hotelName = "this hotel" }) {
       <label>
         {t("forms.message")}
         <textarea
-          key={defaultMessage}
           name="message"
           rows="4"
-          defaultValue={defaultMessage}
+          value={message}
+          onChange={(event) => setMessage(event.target.value)}
         />
       </label>
       <button className="button primary" type="submit">

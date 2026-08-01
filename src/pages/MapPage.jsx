@@ -10,7 +10,7 @@ export default function MapPage() {
   return (
     <main>
       <section className="page-hero">
-        <p className="eyebrow">Area map</p>
+        <p className="eyebrow">{t("map.eyebrow")}</p>
         <h1>{t("map.title")}</h1>
         <p>{t("map.intro")}</p>
       </section>

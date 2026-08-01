@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Send } from "lucide-react";
 import { useI18n } from "../i18n.jsx";
+import { useLocalizedTemplate } from "../hooks/useLocalizedTemplate.js";
 
 export default function ContactForm() {
   const [sent, setSent] = useState(false);
   const { t } = useI18n();
+  const [message, setMessage] = useLocalizedTemplate(t("forms.contactMessage"));
 
   function handleSubmit(event) {
     event.preventDefault();
@@ -23,7 +25,7 @@ export default function ContactForm() {
         <input name="phone" type="tel" autoComplete="tel" required />
       </label>
       <label>
-        Email
+        {t("forms.email")}
         <input name="email" type="email" autoComplete="email" />
       </label>
       <label>
@@ -31,7 +33,8 @@ export default function ContactForm() {
         <textarea
           name="message"
           rows="5"
-          defaultValue="I am looking for a small hotel in Batumi. Dates, area and budget:"
+          value={message}
+          onChange={(event) => setMessage(event.target.value)}
         />
       </label>
       <button className="button primary" type="submit">

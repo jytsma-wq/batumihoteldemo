@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { MapPinned, Pause, Play, Waves } from "lucide-react";
-import { hotels } from "../data/site.js";
-import { useI18n, useLocalePath } from "../i18n.jsx";
+import { useI18n, useLocalePath, useSiteData } from "../i18n.jsx";
 
 function prefersReducedMotion() {
   return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -13,7 +12,8 @@ export default function ActionShowcase() {
   const [playing, setPlaying] = useState(true);
   const { dataLabel, list, t } = useI18n();
   const localePath = useLocalePath();
-  const featured = useMemo(() => hotels.slice(0, 5), []);
+  const { hotels } = useSiteData();
+  const featured = useMemo(() => hotels.slice(0, 5), [hotels]);
   const tickerItems = list("home.motionTickerItems");
   const activeHotel = featured[activeIndex];
   const activeAreaLabel = dataLabel("areas", activeHotel.areaName);
@@ -70,7 +70,7 @@ export default function ActionShowcase() {
           />
           <div>
             <p className="eyebrow">{activeAreaLabel} / {activeHotel.distanceToBeach}</p>
-            <h3>{activeHotel.name}</h3>
+            <h3><bdi>{activeHotel.name}</bdi></h3>
             <p>{activeHotel.shortDescription}</p>
             <Link className="text-link" to={localePath(`/hotels/${activeHotel.slug}`)}>
               {t("home.motionViewStay")}

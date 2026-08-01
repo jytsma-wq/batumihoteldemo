@@ -4,29 +4,27 @@ import CollectionCard from "../components/CollectionCard.jsx";
 import FAQSection from "../components/FAQSection.jsx";
 import HotelCard from "../components/HotelCard.jsx";
 import { usePageMeta } from "../hooks/usePageMeta.js";
-import { areas, collectionHotels, collections, getCollection } from "../data/site.js";
-import { useI18n, useLocalePath } from "../i18n.jsx";
+import { useI18n, useLocalePath, useSiteData } from "../i18n.jsx";
 
-function collectionFaq(collection) {
+function collectionFaq(collection, t) {
   return [
     {
-      question: `How should I choose between these ${collection.title.toLowerCase()}?`,
-      answer:
-        "Start with the area and practical details: beach route, room type, parking, noise level and how you will reach central Batumi."
+      question: t("collections.chooseQuestion", { collectionTitle: collection.title.toLowerCase() }),
+      answer: t("collections.chooseAnswer")
     },
     {
-      question: "Can I contact these small hotels directly?",
-      answer:
-        "Yes. Each hotel page includes WhatsApp and a simple request form so you can ask about dates, room type and arrival details."
+      question: t("collections.directQuestion"),
+      answer: t("collections.directAnswer")
     }
   ];
 }
 
 export default function CollectionDetailPage() {
   const { slug } = useParams();
-  const collection = getCollection(slug);
   const { t } = useI18n();
   const localePath = useLocalePath();
+  const { areas, collectionHotels, collections, getCollection } = useSiteData();
+  const collection = getCollection(slug);
 
   const hotels = collection ? collectionHotels(collection) : [];
   const bestAreas = collection ? areas.filter((area) => collection.bestAreas.includes(area.slug)) : [];
@@ -73,7 +71,7 @@ export default function CollectionDetailPage() {
         </article>
         <article>
           <h2>{t("collections.faq")}</h2>
-          <FAQSection title="" faqs={collectionFaq(collection)} />
+          <FAQSection title="" faqs={collectionFaq(collection, t)} />
         </article>
       </section>
 
