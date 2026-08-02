@@ -77,11 +77,31 @@ function Header() {
   const location = useLocation();
   const { t } = useI18n();
   const localePath = useLocalePath();
+  const menuButtonRef = useRef(null);
 
   useEffect(() => {
     setOpen(false);
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event) => {
+      if (event.key !== "Escape") return;
+      setOpen(false);
+      requestAnimationFrame(() => menuButtonRef.current?.focus());
+    };
+
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [open]);
 
   const nav = (
     <>
@@ -112,21 +132,24 @@ function Header() {
           {t("common.findRoom")}
         </Link>
         <button
+          ref={menuButtonRef}
           className="icon-button menu-button"
           type="button"
           aria-label={open ? t("common.closeMenu") : t("common.openMenu")}
+          aria-expanded={open}
+          aria-controls="mobile-navigation"
           onClick={() => setOpen((value) => !value)}
         >
           {open ? <X size={21} /> : <Menu size={21} />}
         </button>
       </div>
       {open && (
-        <div className="mobile-nav" aria-label={t("common.mobileNavigation")}>
+        <nav id="mobile-navigation" className="mobile-nav" aria-label={t("common.mobileNavigation")}>
           {nav}
           <Link className="button primary" to={localePath("/hotels")}>
             {t("common.findRoom")}
           </Link>
-        </div>
+        </nav>
       )}
     </header>
   );

@@ -130,7 +130,16 @@ function checkHeading(html, expected, context) {
 }
 
 function decodedAttribute(value) {
-  return value.replaceAll("&amp;", "&").replaceAll("&#38;", "&");
+  // Decode the ampersand entity exactly once, matching HTML parser behavior.
+  // A sequence such as `&amp;#38;` must remain `&#38;`, not become `&`.
+  return value.replace(/&(amp|#38|#x26);/gi, "&");
+}
+
+if (decodedAttribute("?a=1&amp;b=2") !== "?a=1&b=2") {
+  throw new Error("Dist-check attribute decoder failed a basic entity case.");
+}
+if (decodedAttribute("?a=&amp;#38;") !== "?a=&#38;") {
+  throw new Error("Dist-check attribute decoder decoded an entity more than once.");
 }
 
 async function outputTargetExists(pathname) {

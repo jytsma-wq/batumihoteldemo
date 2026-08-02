@@ -41,7 +41,7 @@ export default function ContactForm() {
         <Send size={17} />
         {t("forms.contactButton")}
       </button>
-      {sent && <p className="success-note">{t("forms.contactSuccess")}</p>}
+      {sent && <p className="success-note" role="status" aria-live="polite">{t("forms.contactSuccess")}</p>}
     </form>
   );
 }
