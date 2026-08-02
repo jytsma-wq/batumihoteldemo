@@ -55,7 +55,7 @@ export default function BookingRequestForm({ hotelName }) {
         <Send size={17} />
         {t("forms.send")}
       </button>
-      {sent && <p className="success-note">{t("forms.bookingSuccess")}</p>}
+      {sent && <p className="success-note" role="status" aria-live="polite">{t("forms.bookingSuccess")}</p>}
     </form>
   );
 }
